@@ -5,7 +5,7 @@ import { lastChange, renderApp } from "@/test/render";
 describe("Grundlagen", () => {
   it("shows the live values and warns at maximum gain", async () => {
     await renderApp("/");
-    expect(await screen.findByText("Hardware am Maximum. Mehr geht nur über den Software-Boost.")).toBeInTheDocument();
+    expect(await screen.findByText("Hardware am Maximum. Mehr geht nur über die Mikrofon-Lautstärke des Systems.")).toBeInTheDocument();
     expect(screen.getByRole("slider", { name: "Mikrofon-Gain" })).toHaveAttribute("aria-valuenow", "100");
     expect(screen.getByRole("slider", { name: "Lautstärke" })).toHaveAttribute("aria-valuenow", "41");
     expect(screen.getByText("verbunden")).toBeInTheDocument();
@@ -29,11 +29,11 @@ describe("Grundlagen", () => {
     await waitFor(() => expect(lastChange(backend)).toEqual({ kind: "gain", value: 71 }));
   });
 
-  it("switches the software boost on with the remembered value", async () => {
+  it("switches the system volume boost on with the remembered value", async () => {
     const { backend, user } = await renderApp("/", (b) => {
       b.state.snapshot.settings.boostDb = 14.6;
     });
-    await user.click(await screen.findByRole("switch", { name: "Software-Boost an" }));
+    await user.click(await screen.findByRole("switch", { name: "Mikrofon-Lautstärke über 100 % an" }));
     await waitFor(() => expect(backend.state.snapshot.boostDb).toBe(14.6));
     expect(await screen.findByText("175 %")).toBeInTheDocument();
     expect(screen.getByText("+14,6 dB")).toBeInTheDocument();
