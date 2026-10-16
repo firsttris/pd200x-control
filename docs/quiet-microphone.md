@@ -25,6 +25,11 @@ you too quietly, and apps with automatic gain raise the noise with you.
 5. **Check with a test recording.** It contains the system volume and tells you whether the result is
    quiet, well balanced or too loud.
 
+!!! warning "Calls turn it down again"
+    Teams, Slack and browser calls have an automatic gain control that turns the system microphone
+    volume down, often to about 80 %, and leaves it there. Turn on **Protect from apps** next to the
+    volume on the basics page, and the limiter as a safety net.
+
 !!! tip "Compressor and limiter"
     With a raised system volume, loud laughs can clip. Turn on the **limiter** on the sound page
     (around −3 dB). The **compressor** (around −20 dB) evens out quiet and loud passages.

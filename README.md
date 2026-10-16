@@ -79,6 +79,7 @@ release too. Everything else is in the
 - **Live level meter** in dBFS with the target zone for speech (−12 to −6 dB) and the peak.
 - **Microphone gain** with MAONO's distance hints, **mute** like the button on the microphone.
 - **System microphone volume** up to 200 % – the same control as your desktop's sound settings.
+- **Protect from apps**: Teams, Slack and browsers can no longer turn it down in a call.
 - **Find my level**: five seconds of speech, a proposal for gain and volume, applied when you agree.
 - **Test recording** up to 30 seconds with waveform, peak, average and a verdict.
 

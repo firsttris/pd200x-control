@@ -63,6 +63,13 @@ is missing) by its name, `alsa_input.usb-352f_PD200X…`. `wpctl set-volume <id>
 PipeWire volumes are cubic: 1.75 means an amplitude of 1.75³ ≈ 5.36, that is +14.6 dB, which the
 desktops show as 175 %. WirePlumber keeps it across restarts.
 
+### Protection from apps
+
+WebRTC clients (Teams, Slack, browsers) change the source volume through the PulseAudio interface
+of PipeWire. The switch writes a `pipewire-pulse` drop-in that gives every PulseAudio client the
+`block-source-volume` quirk and restarts `pipewire-pulse`; drop-ins append to `pulse.rules`. `wpctl`
+talks to PipeWire directly and is not affected, so the app can still change the volume.
+
 ## The level finder
 
 From five seconds of the microphone's level reports the app takes the 98th percentile as the speech
@@ -83,5 +90,6 @@ the default output.
 |---|---|
 | The microphone | everything it can be set to; it keeps it without power |
 | WirePlumber | the system microphone volume |
+| `~/.config/pipewire/pipewire-pulse.conf.d/` | "Protect from apps", when it is on |
 | `~/.config/pd200x-control/settings.json` | own EQ profiles, the last EQ, dynamics and light the app set, "light off while muted", the options |
 | The temporary folder | the test recording, until the app quits |

@@ -20,6 +20,7 @@ pd200x light on|off|<colour>      white, red, orange, yellow, green, cyan, blue,
 pd200x light brightness <0-100>
 pd200x light linkage on|off       light off while muted
 pd200x boost [<0-18>|off]         system microphone volume above 100 %, in dB; without a value shows it
+pd200x protect [on|off]           keep apps (Teams, Slack, browsers) from changing the volume
 pd200x calibrate [--seconds 5] [--apply]
                                   measure your speech, propose gain and system volume
 pd200x restore                    send the saved sound and light to the microphone again

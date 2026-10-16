@@ -22,6 +22,13 @@ above 100 %, or let **Find my level** set it.
 Yes. It is the volume of the microphone's PipeWire input, which every desktop's sound settings show.
 The app only goes further than KDE's 150 %, up to 200 %.
 
+## Why is my microphone volume back at 80 % after a call?
+
+Teams, Slack and browsers use WebRTC's automatic gain control, which turns the system microphone
+volume down during a call and does not restore it. Turn on **Protect from apps** on the basics page
+(or `pd200x protect on`): PulseAudio clients may then no longer change it. Your level inside the call
+stays fine, the apps adjust it internally.
+
 ## Does the app have to keep running?
 
 No. The microphone stores its settings itself; the system volume is kept by WirePlumber. Close the

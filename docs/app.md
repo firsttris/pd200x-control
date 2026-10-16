@@ -26,6 +26,13 @@ your desktop's sound settings show (KDE, GNOME, …). Above 100 % it amplifies i
 +14.6 dB. Change it here or there, both show the same value. See
 [A quiet microphone](quiet-microphone.md).
 
+**Protect from apps**: Teams, Slack and browsers (WebRTC's automatic gain control) turn the system
+microphone volume down during a call and leave it there, so after a call you are quiet again
+everywhere else. With this switch on they cannot change it any more; they adjust your level inside
+the call as before. The control in the system's sound settings cannot change it then either, only
+this app. It writes `~/.config/pipewire/pipewire-pulse.conf.d/90-pd200x-control.conf` and restarts
+`pipewire-pulse`, so sound stops for a moment when switching.
+
 **Find my level**: speak for five seconds the way you usually do. The app measures your peaks and
 proposes gain and system volume so they land near −9 dB. It raises the hardware gain first (it adds
 less noise) and only then the system volume. Nothing changes until you press **Apply**.
