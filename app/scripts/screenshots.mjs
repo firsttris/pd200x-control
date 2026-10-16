@@ -105,7 +105,7 @@ const geist = readFileSync(
 const card = (width, height, social) => `<!doctype html><html><head><style>@font-face{font-family:Geist;
   font-weight:100 900;src:url(data:font/woff2;base64,${geist}) format("woff2")}</style></head><body style="margin:0;width:${width}px;height:${height}px;
   background:radial-gradient(circle at 20% 10%,#1f2733,#0e0f11 60%);font-family:Geist,Inter,system-ui,sans-serif;color:#e8eaed;
-  display:flex;align-items:center;gap:56px;padding:0 64px;box-sizing:border-box;overflow:hidden">
+  display:flex;align-items:center;justify-content:center;gap:56px;padding:0 64px;box-sizing:border-box;overflow:hidden">
   <div style="flex:0 0 auto;max-width:${social ? 500 : 640}px">
     <div style="display:flex;align-items:center;gap:18px">
       <img src="data:image/png;base64,${icon}" width="72" height="72">
