@@ -69,6 +69,8 @@ pub enum Cmd {
     Light { args: Vec<String> },
     /// Software boost in PipeWire, 0–18 dB, or `off`; without a value shows it
     Boost { value: Option<String> },
+    /// Keep apps (Teams, Slack, browsers) from changing the microphone volume; without a value shows it
+    Protect { state: Option<OnOff> },
     /// Speak for a few seconds; proposes gain and boost for peaks near −9 dB
     Calibrate {
         #[arg(long, default_value_t = 5)]

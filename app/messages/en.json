@@ -133,5 +133,7 @@
   "recording_mean": "Average",
   "recording_quiet": "Rather quiet – “Find my level” above helps.",
   "recording_loud": "Very loud – it may clip.",
-  "recording_good": "Well balanced."
+  "recording_good": "Well balanced.",
+  "basics_protect": "Protect from apps",
+  "basics_protect_hint": "Teams, Slack and browsers no longer turn the volume down during calls. The control in the system settings cannot change it either then, only this app. Sound stops for a moment when switching."
 }

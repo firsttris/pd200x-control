@@ -49,6 +49,8 @@ pub struct Snapshot {
     pub problem: Option<String>,
     /// The software boost in dB; `None` when PipeWire has no source for it.
     pub boost_db: Option<f32>,
+    /// Apps (Teams, Slack, browsers) may not change the microphone volume.
+    pub protected: bool,
     /// EQ and dynamics as the microphone has them (read when it connects).
     pub tone: Option<Tone>,
     /// The ring light as the microphone has it.
@@ -198,6 +200,7 @@ impl Hub {
             live,
             problem: self.problem.lock().unwrap().clone(),
             boost_db: *self.boost.lock().unwrap(),
+            protected: self.config_home().is_some_and(|h| pipewire::is_protected(&h)),
             tone: onboard.as_ref().map(|(t, _)| t.clone()),
             lighting: onboard.map(|(_, l)| l),
             settings: self.settings(),
@@ -322,6 +325,18 @@ impl Hub {
         let boost = self.boost.lock().unwrap().unwrap_or(0.0);
         let values = device.capture(Duration::from_secs(seconds))?;
         Ok(calibrate::propose(&values, gain, boost)?)
+    }
+
+    /// `~/.config`, the parent of the app's own config folder.
+    fn config_home(&self) -> Option<PathBuf> {
+        self.config_dir.parent().map(PathBuf::from)
+    }
+
+    /// Keeps apps (their automatic gain control) from changing the microphone volume.
+    pub fn set_protected(&self, on: bool) -> CmdResult<()> {
+        let home = self.config_home().ok_or_else(|| CmdError::other("no config folder"))?;
+        pipewire::set_protected(self.runner.as_ref(), &home, on)?;
+        Ok(())
     }
 
     pub fn apply_calibration(&self, gain: u8, boost_db: f32) -> CmdResult<()> {

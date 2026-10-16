@@ -31,6 +31,7 @@ macro_rules! pd200x_commands {
             calibrate,
             apply_calibration,
             set_restore_on_connect,
+            set_protected,
             start_recording,
             stop_recording,
             play_recording,

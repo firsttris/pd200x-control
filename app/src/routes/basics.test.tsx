@@ -70,3 +70,12 @@ describe("Grundlagen", () => {
     expect(await screen.findByText(/Keine Stimme gehört/)).toBeInTheDocument();
   });
 });
+
+describe("protection from apps", () => {
+  it("switches it on", async () => {
+    const { backend, user } = await renderApp("/");
+    await user.click(await screen.findByRole("switch", { name: "Vor Apps schützen" }));
+    await waitFor(() => expect(backend.state.snapshot.protected).toBe(true));
+    expect(backend.state.calls.some((c) => c.cmd === "set_protected" && c.args.on === true)).toBe(true);
+  });
+});

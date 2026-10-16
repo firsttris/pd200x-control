@@ -17,6 +17,7 @@ export const commands = {
 	calibrate: (seconds: number) => typedError<Proposal, CmdError>(__TAURI_INVOKE("calibrate", { seconds })),
 	applyCalibration: (gain: number, boostDb: number | null) => typedError<null, CmdError>(__TAURI_INVOKE("apply_calibration", { gain, boostDb })),
 	setRestoreOnConnect: (on: boolean) => typedError<null, CmdError>(__TAURI_INVOKE("set_restore_on_connect", { on })),
+	setProtected: (on: boolean) => typedError<null, CmdError>(__TAURI_INVOKE("set_protected", { on })),
 	startRecording: () => typedError<null, CmdError>(__TAURI_INVOKE("start_recording")),
 	stopRecording: () => typedError<RecordingStatus, CmdError>(__TAURI_INVOKE("stop_recording")),
 	playRecording: () => typedError<null, CmdError>(__TAURI_INVOKE("play_recording")),
@@ -175,6 +176,8 @@ export type Snapshot = {
 	problem: string | null,
 	/**  The software boost in dB; `None` when PipeWire has no source for it. */
 	boostDb: number | null,
+	/**  Apps (Teams, Slack, browsers) may not change the microphone volume. */
+	protected: boolean,
 	/**  EQ and dynamics as the microphone has them (read when it connects). */
 	tone: Tone | null,
 	/**  The ring light as the microphone has it. */

@@ -8,7 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { MAX_BOOST_DB } from "@/lib/bindings";
 import { dbToPercent, formatDb, formatNumber, percentToDb } from "@/lib/format";
-import { useApply, useDraft, useLevel, useSetBoost, useSnapshot } from "@/lib/queries";
+import { useApply, useDraft, useLevel, useSetBoost, useSetProtected, useSnapshot } from "@/lib/queries";
 import { cn, num } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -66,8 +66,17 @@ function LevelPanel({ muted, connected, onMute }: { muted: boolean; connected: b
 
 const MAX_PERCENT = dbToPercent(MAX_BOOST_DB);
 
-function BoostControl({ boostDb, remembered }: { boostDb: number | null; remembered: number }) {
+function BoostControl({
+  boostDb,
+  remembered,
+  protectedFromApps,
+}: {
+  boostDb: number | null;
+  remembered: number;
+  protectedFromApps: boolean;
+}) {
   const setBoost = useSetBoost();
+  const setProtected = useSetProtected();
   const available = boostDb !== null;
   const db = num(boostDb);
   const draft = useDraft(dbToPercent(db), (p) => setBoost.mutate(percentToDb(p)), 120);
@@ -104,6 +113,20 @@ function BoostControl({ boostDb, remembered }: { boostDb: number | null; remembe
         <span>100 %</span>
         <span>{available ? m.basics_boost_kde() : m.error_noAudioSource()}</span>
         <span>{MAX_PERCENT} %</span>
+      </div>
+      <div className="flex items-start gap-2.5 pt-1">
+        <Switch
+          id="protect"
+          checked={protectedFromApps}
+          disabled={!available || setProtected.isPending}
+          onCheckedChange={(on) => setProtected.mutate(on)}
+        />
+        <div className="flex flex-col gap-0.5">
+          <label htmlFor="protect" className="font-medium">
+            {m.basics_protect()}
+          </label>
+          <span className="text-xs leading-relaxed text-muted-foreground">{m.basics_protect_hint()}</span>
+        </div>
       </div>
     </div>
   );
@@ -199,7 +222,11 @@ export function BasicsPage() {
                 </p>
               )}
             </div>
-            <BoostControl boostDb={data?.boostDb ?? null} remembered={num(data?.settings.boostDb, 10)} />
+            <BoostControl
+              boostDb={data?.boostDb ?? null}
+              remembered={num(data?.settings.boostDb, 10)}
+              protectedFromApps={!!data?.protected}
+            />
           </Card>
 
           <div className="grid gap-3 md:grid-cols-2">

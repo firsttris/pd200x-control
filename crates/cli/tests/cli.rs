@@ -90,3 +90,13 @@ fn restore_without_saved_settings() {
     pd200x(tmp.path()).arg("restore").assert().success().stdout(contains("Nothing saved yet"));
     pd200x(tmp.path()).args(["eq", "list"]).assert().success().stdout(contains("low_cut_mid_boost"));
 }
+
+#[test]
+fn protect_shows_and_writes_the_drop_in() {
+    let tmp = tempfile::tempdir().unwrap();
+    pd200x(tmp.path()).arg("protect").assert().success().stdout(contains("Protected from apps: off"));
+    // No systemctl on PATH: the file is written, the restart reports the missing tool
+    pd200x(tmp.path()).args(["protect", "on"]).assert().failure().stderr(contains("systemctl is not installed"));
+    assert!(tmp.path().join("pipewire/pipewire-pulse.conf.d/90-pd200x-control.conf").exists());
+    pd200x(tmp.path()).arg("protect").assert().success().stdout(contains("Protected from apps: on"));
+}

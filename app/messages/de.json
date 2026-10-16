@@ -133,5 +133,7 @@
   "recording_mean": "Durchschnitt",
   "recording_quiet": "Eher leise – „Pegel einmessen“ oben hilft.",
   "recording_loud": "Sehr laut – es kann übersteuern.",
-  "recording_good": "Gut ausgesteuert."
+  "recording_good": "Gut ausgesteuert.",
+  "basics_protect": "Vor Apps schützen",
+  "basics_protect_hint": "Teams, Slack und Browser regeln die Lautstärke im Call nicht mehr herunter. Auch der Regler in den Systemeinstellungen kann sie dann nicht ändern, nur diese App. Beim Umschalten setzt der Ton kurz aus."
 }

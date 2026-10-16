@@ -199,6 +199,14 @@ pub fn run(cmd: Cmd) -> Result<()> {
             Ok(())
         }
         Cmd::Boost { value } => boost(value.as_deref()),
+        Cmd::Protect { state } => {
+            let home = pipewire::system_config_home().context("neither XDG_CONFIG_HOME nor HOME is set")?;
+            match state {
+                None => println!("Protected from apps: {}", if pipewire::is_protected(&home) { "on" } else { "off" }),
+                Some(s) => pipewire::set_protected(&SystemRunner, &home, s.is_on())?,
+            }
+            Ok(())
+        }
         cmd => {
             let d = open_device()?;
             match cmd {
@@ -235,7 +243,7 @@ pub fn run(cmd: Cmd) -> Result<()> {
                 Cmd::Light { args } => light(&d, &args),
                 Cmd::Calibrate { seconds, apply } => calibrate_cmd(&d, seconds, apply),
                 Cmd::Restore => restore(&d),
-                Cmd::Status { .. } | Cmd::Boost { .. } => unreachable!("handled above"),
+                Cmd::Status { .. } | Cmd::Boost { .. } | Cmd::Protect { .. } => unreachable!("handled above"),
             }
         }
     }

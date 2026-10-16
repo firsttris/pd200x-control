@@ -90,6 +90,12 @@ pub fn set_restore_on_connect(state: State<'_, AppState>, on: bool) -> CmdResult
 
 #[tauri::command]
 #[specta::specta]
+pub async fn set_protected(state: State<'_, AppState>, on: bool) -> CmdResult<()> {
+    blocking(&state, move |hub| hub.set_protected(on)).await
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn start_recording(state: State<'_, AppState>) -> CmdResult<()> {
     blocking(&state, |hub| hub.start_recording()).await
 }

@@ -90,6 +90,13 @@ export const useStartRecording = () => useRecordingMutation(() => api.startRecor
 export const useStopRecording = () => useRecordingMutation(() => api.stopRecording());
 export const usePlayRecording = () => useRecordingMutation(() => api.playRecording());
 
+export function useSetProtected() {
+  return useSnapshotMutation(
+    (on: boolean) => api.setProtected(on),
+    (s, on) => ({ ...s, protected: on }),
+  );
+}
+
 export function useApplyCalibration() {
   return useSnapshotMutation(({ gain, boostDb }: { gain: number; boostDb: number }) =>
     api.applyCalibration(gain, boostDb),

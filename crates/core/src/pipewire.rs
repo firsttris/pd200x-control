@@ -5,6 +5,7 @@
 //! +14.6 dB (`pw-dump` shows the cube as `channelVolumes`).
 
 use std::io;
+use std::path::Path;
 use std::process::Command;
 
 use crate::{Error, Result};
@@ -121,6 +122,53 @@ pub fn set_boost(runner: &dyn Runner, db: f32) -> Result<()> {
     run(runner, "wpctl", &["set-volume", &id, &volume]).map(|_| ())
 }
 
+/// The drop-in that keeps apps from changing microphone volumes, relative to
+/// the config folder (`~/.config`).
+pub const PROTECT_FILE: &str = "pipewire/pipewire-pulse.conf.d/90-pd200x-control.conf";
+
+/// Every PulseAudio client (Teams, Slack, browsers, the desktop's sound
+/// settings) gets pipewire-pulse's `block-source-volume` quirk: their
+/// automatic gain control can no longer turn the input down. Native PipeWire
+/// clients such as `wpctl` (and this app) are not affected. Arrays in conf.d
+/// files are appended to `pulse.rules` of pipewire-pulse.conf.
+const PROTECT_CONF: &str = "\
+# Written by pd200x-control (\"Protect from apps\"): PulseAudio clients such as Teams,
+# Slack and browsers may no longer change microphone volumes; their automatic gain
+# control kept turning the input down. Delete this file and restart pipewire-pulse
+# (systemctl --user restart pipewire-pulse) to undo it.
+pulse.rules = [
+    {
+        matches = [ { application.name = \"~.*\" } { application.process.binary = \"~.*\" } ]
+        actions = { quirks = [ block-source-volume ] }
+    }
+]
+";
+
+pub fn is_protected(config_home: &Path) -> bool {
+    config_home.join(PROTECT_FILE).exists()
+}
+
+/// Writes or removes the drop-in, then restarts pipewire-pulse so it applies
+/// (sound from PulseAudio apps stops for a moment).
+pub fn set_protected(runner: &dyn Runner, config_home: &Path, on: bool) -> Result<()> {
+    let path = config_home.join(PROTECT_FILE);
+    if on {
+        std::fs::create_dir_all(path.parent().expect("PROTECT_FILE has a folder"))?;
+        std::fs::write(&path, PROTECT_CONF)?;
+    } else if path.exists() {
+        std::fs::remove_file(&path)?;
+    }
+    run(runner, "systemctl", &["--user", "restart", "pipewire-pulse.service"]).map(|_| ())
+}
+
+/// `$XDG_CONFIG_HOME`, else `~/.config`.
+pub fn system_config_home() -> Option<std::path::PathBuf> {
+    match std::env::var("XDG_CONFIG_HOME").ok().filter(|x| !x.is_empty()) {
+        Some(x) => Some(x.into()),
+        None => std::env::var("HOME").ok().map(|h| Path::new(&h).join(".config")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -192,6 +240,23 @@ mod tests {
         set_boost(&f, 12.0).unwrap();
         assert_eq!(f.calls.lock().unwrap().last().unwrap(), "wpctl set-volume 105 1.5849");
         assert!(set_boost(&f, 30.0).is_err());
+    }
+
+    #[test]
+    fn protection_writes_the_quirk_and_restarts_pipewire_pulse() {
+        let tmp = tempfile::tempdir().unwrap();
+        let f = fake("Volume: 1.75");
+        assert!(!is_protected(tmp.path()));
+        set_protected(&f, tmp.path(), true).unwrap();
+        assert!(is_protected(tmp.path()));
+        let conf = std::fs::read_to_string(tmp.path().join(PROTECT_FILE)).unwrap();
+        assert!(conf.contains("quirks = [ block-source-volume ]"));
+        assert!(conf.contains("application.name = \"~.*\""));
+        assert_eq!(f.calls.lock().unwrap().last().unwrap(), "systemctl --user restart pipewire-pulse.service");
+        set_protected(&f, tmp.path(), false).unwrap();
+        assert!(!is_protected(tmp.path()));
+        // Switching off twice is fine
+        set_protected(&f, tmp.path(), false).unwrap();
     }
 
     #[test]

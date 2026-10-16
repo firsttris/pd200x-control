@@ -102,6 +102,7 @@ export function initialState(): MockState {
       live: { mute: false, gain: 100, monitor: true, headphone: 41, noiseCancellation: false, ncStrength: 21 },
       problem: null,
       boostDb: 0,
+      protected: false,
       // As a microphone reports it: flat EQ, cyan ring
       tone: { ...(structuredClone(DEFAULT_TONE) as unknown as Tone), source: "flat" },
       lighting: { enabled: true, brightness: 70, color: "cyan", linkage: false },
@@ -233,6 +234,10 @@ export function createMockBackend(state: MockState = initialState()) {
         elapsedMs: active ? Date.now() - now.startedAt : 0,
         info: now.state === "recording" ? null : now.info,
       };
+    },
+    set_protected: ({ on }) => {
+      state.snapshot.protected = Boolean(on);
+      return null;
     },
     set_restore_on_connect: ({ on }) => {
       settings().restoreOnConnect = Boolean(on);
