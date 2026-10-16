@@ -17,6 +17,10 @@ export const commands = {
 	calibrate: (seconds: number) => typedError<Proposal, CmdError>(__TAURI_INVOKE("calibrate", { seconds })),
 	applyCalibration: (gain: number, boostDb: number | null) => typedError<null, CmdError>(__TAURI_INVOKE("apply_calibration", { gain, boostDb })),
 	setRestoreOnConnect: (on: boolean) => typedError<null, CmdError>(__TAURI_INVOKE("set_restore_on_connect", { on })),
+	startRecording: () => typedError<null, CmdError>(__TAURI_INVOKE("start_recording")),
+	stopRecording: () => typedError<RecordingStatus, CmdError>(__TAURI_INVOKE("stop_recording")),
+	playRecording: () => typedError<null, CmdError>(__TAURI_INVOKE("play_recording")),
+	recordingStatus: () => typedError<RecordingStatus, CmdError>(__TAURI_INVOKE("recording_status")),
 };
 
 /* Constants */
@@ -25,6 +29,8 @@ export const DEFAULT_LIGHTING = {"brightness":60,"color":"rainbow","enabled":tru
 export const DEFAULT_TONE = {"compressor":{"enabled":false,"thresholdDb":-20.0},"eq":[{"enabled":false,"filter":"peaking","frequency":3000,"gainDb":3.0,"q":1.3899999856948853},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":5000,"gainDb":0.0,"q":1.0},{"enabled":false,"filter":"highPass","frequency":108,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"lowPass","frequency":22000,"gainDb":0.0,"q":1.0}],"limiter":{"enabled":false,"thresholdDb":-3.0},"source":"flat"} as const;
 
 export const MAX_BOOST_DB = 18.0 as const;
+
+export const MAX_RECORDING_SECONDS = 30 as const;
 
 export const PRESETS = [{"eq":[{"enabled":false,"filter":"peaking","frequency":3000,"gainDb":3.0,"q":1.3899999856948853},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":5000,"gainDb":0.0,"q":1.0},{"enabled":false,"filter":"highPass","frequency":108,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"lowPass","frequency":22000,"gainDb":0.0,"q":1.0}],"id":"flat"},{"eq":[{"enabled":false,"filter":"peaking","frequency":3000,"gainDb":3.0,"q":1.3899999856948853},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":5000,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"highPass","frequency":108,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"lowPass","frequency":22000,"gainDb":0.0,"q":1.0}],"id":"low_cut"},{"eq":[{"enabled":true,"filter":"peaking","frequency":3000,"gainDb":3.0,"q":1.3899999856948853},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":5000,"gainDb":0.0,"q":1.0},{"enabled":false,"filter":"highPass","frequency":108,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"lowPass","frequency":22000,"gainDb":0.0,"q":1.0}],"id":"mid_boost"},{"eq":[{"enabled":true,"filter":"peaking","frequency":3000,"gainDb":3.0,"q":1.3899999856948853},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"peaking","frequency":5000,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"highPass","frequency":108,"gainDb":0.0,"q":0.6899999976158142},{"enabled":false,"filter":"lowPass","frequency":22000,"gainDb":0.0,"q":1.0}],"id":"low_cut_mid_boost"},{"eq":[{"enabled":true,"filter":"lowShelf","frequency":200,"gainDb":-5.0,"q":0.800000011920929},{"enabled":true,"filter":"peaking","frequency":366,"gainDb":-2.0,"q":0.5},{"enabled":true,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"peaking","frequency":5000,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"peaking","frequency":10000,"gainDb":3.0,"q":0.5},{"enabled":true,"filter":"highPass","frequency":110,"gainDb":0.0,"q":1.0},{"enabled":false,"filter":"lowPass","frequency":22000,"gainDb":0.0,"q":1.0}],"id":"bright"},{"eq":[{"enabled":true,"filter":"peaking","frequency":120,"gainDb":-3.0,"q":1.5},{"enabled":true,"filter":"peaking","frequency":500,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"peaking","frequency":1320,"gainDb":2.5,"q":1.0},{"enabled":true,"filter":"peaking","frequency":4310,"gainDb":2.0,"q":1.5},{"enabled":true,"filter":"peaking","frequency":5000,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"highPass","frequency":80,"gainDb":0.0,"q":1.0},{"enabled":false,"filter":"lowPass","frequency":22000,"gainDb":0.0,"q":1.0}],"id":"natural"},{"eq":[{"enabled":true,"filter":"peaking","frequency":400,"gainDb":-8.0,"q":3.0},{"enabled":true,"filter":"peaking","frequency":250,"gainDb":-3.0,"q":1.5},{"enabled":true,"filter":"peaking","frequency":1300,"gainDb":2.5,"q":0.6899999976158142},{"enabled":true,"filter":"peaking","frequency":10000,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"peaking","frequency":5000,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"highPass","frequency":50,"gainDb":0.0,"q":1.0},{"enabled":false,"filter":"lowPass","frequency":22000,"gainDb":0.0,"q":1.0}],"id":"classic"},{"eq":[{"enabled":true,"filter":"peaking","frequency":110,"gainDb":3.0,"q":0.5},{"enabled":true,"filter":"peaking","frequency":500,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"peaking","frequency":1000,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"peaking","frequency":2000,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"peaking","frequency":5000,"gainDb":0.0,"q":1.0},{"enabled":false,"filter":"highPass","frequency":10,"gainDb":0.0,"q":1.0},{"enabled":true,"filter":"lowPass","frequency":7000,"gainDb":0.0,"q":1.0}],"id":"deep"}] as const;
 
@@ -117,6 +123,27 @@ export type Proposal = {
 	boostDb: number | null,
 	/**  Where the peaks land with the proposal (after the boost). */
 	expectedPeakDb: number | null,
+};
+
+export type RecordingInfo = {
+	durationMs: number,
+	/**  dBFS of the loudest sample. */
+	peakDb: number | null,
+	/**  dBFS of the RMS over the whole recording. */
+	meanDb: number | null,
+	/**  [`WAVEFORM_POINTS`] values 0…1: the loudest sample in each slice. */
+	waveform: (number | null)[],
+};
+
+export type RecordingState = "idle" | "recording" | "ready" | "playing";
+
+/**  The test recording, polled while its card is on screen. */
+export type RecordingStatus = {
+	state: RecordingState,
+	/**  Since the recording or the playback started. */
+	elapsedMs: number,
+	/**  The last finished recording. */
+	info: RecordingInfo | null,
 };
 
 /**  The colours of the ring light, in firmware order. */

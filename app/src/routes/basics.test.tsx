@@ -5,7 +5,9 @@ import { lastChange, renderApp } from "@/test/render";
 describe("Grundlagen", () => {
   it("shows the live values and warns at maximum gain", async () => {
     await renderApp("/");
-    expect(await screen.findByText("Hardware am Maximum. Mehr geht nur über die Mikrofon-Lautstärke des Systems.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Hardware am Maximum. Mehr geht nur über die Mikrofon-Lautstärke des Systems."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("slider", { name: "Mikrofon-Gain" })).toHaveAttribute("aria-valuenow", "100");
     expect(screen.getByRole("slider", { name: "Lautstärke" })).toHaveAttribute("aria-valuenow", "41");
     expect(screen.getByText("verbunden")).toBeInTheDocument();

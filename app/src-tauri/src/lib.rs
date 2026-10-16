@@ -10,6 +10,7 @@ use std::thread;
 use std::time::Duration;
 
 use pd200x_core::pipewire::SystemRunner;
+use pd200x_core::recording::SystemSpawner;
 use pd200x_core::{sim, store, Device};
 use tauri::Manager;
 
@@ -30,6 +31,10 @@ macro_rules! pd200x_commands {
             calibrate,
             apply_calibration,
             set_restore_on_connect,
+            start_recording,
+            stop_recording,
+            play_recording,
+            recording_status,
         ]
     };
 }
@@ -46,6 +51,7 @@ pub fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         .constant("DEFAULT_LIGHTING", Lighting::default())
         .constant("TARGET_PEAK_DB", pd200x_core::calibrate::TARGET_PEAK_DB)
         .constant("MAX_BOOST_DB", pd200x_core::pipewire::MAX_BOOST_DB)
+        .constant("MAX_RECORDING_SECONDS", pd200x_core::recording::MAX_SECONDS)
 }
 
 /// Writes `src/lib/bindings.ts` for the frontend.
@@ -89,7 +95,8 @@ fn watch(hub: Arc<hub::Hub>) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let config_dir = store::system_config_dir().expect("HOME must be set");
-    let hub = Arc::new(hub::Hub::new(config_dir, Box::new(SystemRunner), opener()));
+    let hub = Arc::new(hub::Hub::new(config_dir, Box::new(SystemRunner), Box::new(SystemSpawner), opener()));
+    let exit_hub = hub.clone();
     let builder = specta_builder();
 
     tauri::Builder::default()
@@ -113,6 +120,12 @@ pub fn run() {
             }
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running pd200x-control");
+        .build(tauri::generate_context!())
+        .expect("error while building pd200x-control")
+        .run(move |_, event| {
+            if let tauri::RunEvent::Exit = event {
+                // The temporary recording goes with the app.
+                exit_hub.cleanup();
+            }
+        });
 }

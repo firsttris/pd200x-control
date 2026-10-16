@@ -121,5 +121,17 @@
   "error_toolMissing": "wpctl or pw-dump is missing (PipeWire tools).",
   "error_noVoice": "No voice heard. Speak normally into the microphone while measuring.",
   "error_invalidValue": "Invalid value.",
-  "error_other": "Something went wrong."
+  "error_other": "Something went wrong.",
+  "recording_title": "Test recording",
+  "recording_hint": "How others hear you: with the system's microphone volume, up to 30 seconds",
+  "recording_start": "Record",
+  "recording_again": "Record again",
+  "recording_stop": "Stop",
+  "recording_play": "Play",
+  "recording_stop_playback": "Stop playback",
+  "recording_empty": "No recording yet",
+  "recording_mean": "Average",
+  "recording_quiet": "Rather quiet – “Find my level” above helps.",
+  "recording_loud": "Very loud – it may clip.",
+  "recording_good": "Well balanced."
 }

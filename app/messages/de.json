@@ -121,5 +121,17 @@
   "error_toolMissing": "wpctl oder pw-dump fehlt (PipeWire-Werkzeuge).",
   "error_noVoice": "Keine Stimme gehört. Sprich beim Einmessen normal ins Mikrofon.",
   "error_invalidValue": "Ungültiger Wert.",
-  "error_other": "Etwas ist schiefgegangen."
+  "error_other": "Etwas ist schiefgegangen.",
+  "recording_title": "Probeaufnahme",
+  "recording_hint": "So hören dich andere: mit der Mikrofon-Lautstärke des Systems, bis 30 Sekunden",
+  "recording_start": "Aufnehmen",
+  "recording_again": "Neu aufnehmen",
+  "recording_stop": "Stopp",
+  "recording_play": "Abspielen",
+  "recording_stop_playback": "Wiedergabe stoppen",
+  "recording_empty": "Noch keine Aufnahme",
+  "recording_mean": "Durchschnitt",
+  "recording_quiet": "Eher leise – „Pegel einmessen“ oben hilft.",
+  "recording_loud": "Sehr laut – es kann übersteuern.",
+  "recording_good": "Gut ausgesteuert."
 }

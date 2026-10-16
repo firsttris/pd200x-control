@@ -10,7 +10,7 @@ use pd200x_core::level::Level;
 use pd200x_core::model::Profile;
 use pd200x_core::Change;
 
-use crate::hub::{CmdError, CmdResult, Hub, Snapshot};
+use crate::hub::{CmdError, CmdResult, Hub, RecordingStatus, Snapshot};
 
 pub type AppState = Arc<Hub>;
 
@@ -86,4 +86,28 @@ pub async fn apply_calibration(state: State<'_, AppState>, gain: u8, boost_db: f
 #[specta::specta]
 pub fn set_restore_on_connect(state: State<'_, AppState>, on: bool) -> CmdResult<()> {
     state.set_restore_on_connect(on)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn start_recording(state: State<'_, AppState>) -> CmdResult<()> {
+    blocking(&state, |hub| hub.start_recording()).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn stop_recording(state: State<'_, AppState>) -> CmdResult<RecordingStatus> {
+    blocking(&state, |hub| hub.stop_recording()).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn play_recording(state: State<'_, AppState>) -> CmdResult<()> {
+    blocking(&state, |hub| hub.play_recording()).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn recording_status(state: State<'_, AppState>) -> CmdResult<RecordingStatus> {
+    blocking(&state, |hub| hub.recording_status()).await
 }

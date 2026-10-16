@@ -66,6 +66,30 @@ export function useRestoreOnConnect() {
   );
 }
 
+const RECORDING = ["recording"] as const;
+
+/** The test recording; polled fast while it records or plays. */
+export function useRecording() {
+  return useQuery({
+    queryKey: RECORDING,
+    queryFn: () => api.recordingStatus(),
+    refetchInterval: (q) => (q.state.data?.state === "recording" || q.state.data?.state === "playing" ? 150 : 1000),
+  });
+}
+
+function useRecordingMutation(send: () => Promise<unknown>) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: send,
+    onError: (error) => toast.error(errorMessage(error)),
+    onSettled: () => client.invalidateQueries({ queryKey: RECORDING }),
+  });
+}
+
+export const useStartRecording = () => useRecordingMutation(() => api.startRecording());
+export const useStopRecording = () => useRecordingMutation(() => api.stopRecording());
+export const usePlayRecording = () => useRecordingMutation(() => api.playRecording());
+
 export function useApplyCalibration() {
   return useSnapshotMutation(({ gain, boostDb }: { gain: number; boostDb: number }) =>
     api.applyCalibration(gain, boostDb),

@@ -1,6 +1,7 @@
 import { CircleAlert, Mic, MicOff } from "lucide-react";
 import { CalibrateDialog } from "@/components/calibrate-dialog";
 import { LevelMeter, METER_SCALE } from "@/components/level-meter";
+import { RecordingCard } from "@/components/recording-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle, Value } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -257,6 +258,8 @@ export function BasicsPage() {
             />
           </Card>
         </div>
+
+        <RecordingCard connected={connected} />
       </main>
     </div>
   );

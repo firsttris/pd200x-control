@@ -73,3 +73,17 @@ describe("rules shared with the core", () => {
     expect(uniqueId("Natural", [])).toBe("profile-natural");
   });
 });
+
+describe("mock recording", () => {
+  it("stops by itself at the time limit and after playback", async () => {
+    const b = createMockBackend();
+    b.state.latency = 0;
+    await expect(b.invoke("play_recording", {})).rejects.toMatchObject({ kind: "invalidValue" });
+    await b.invoke("start_recording", {});
+    b.state.recording.startedAt -= 31_000;
+    expect(await b.invoke("recording_status", {})).toMatchObject({ state: "ready", info: { durationMs: 31_000 } });
+    await b.invoke("play_recording", {});
+    b.state.recording.startedAt -= 40_000;
+    expect(await b.invoke("recording_status", {})).toMatchObject({ state: "ready" });
+  });
+});

@@ -4,7 +4,7 @@
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -14,6 +14,7 @@ use pd200x_core::changes::{lighting_changes, tone_changes};
 use pd200x_core::level::Level;
 use pd200x_core::model::{Lighting, LiveState, Profile, Settings, Tone, EQ_BANDS};
 use pd200x_core::pipewire::{self, Runner};
+use pd200x_core::recording::{self, Process, RecordingInfo, Spawner};
 use pd200x_core::{presets, store, Change, Device, Error};
 
 /// Error as the frontend sees it: a stable kind it translates, plus the
@@ -66,6 +67,33 @@ pub fn presets_info() -> Vec<PresetInfo> {
     presets::ALL.iter().map(|(id, eq)| PresetInfo { id: (*id).to_string(), eq: eq.to_vec() }).collect()
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum RecordingState {
+    Idle,
+    Recording,
+    Ready,
+    Playing,
+}
+
+/// The test recording, polled while its card is on screen.
+#[derive(Debug, Clone, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RecordingStatus {
+    pub state: RecordingState,
+    /// Since the recording or the playback started.
+    pub elapsed_ms: u32,
+    /// The last finished recording.
+    pub info: Option<RecordingInfo>,
+}
+
+enum Rec {
+    Idle,
+    Recording { process: Box<dyn Process>, started: Instant },
+    Ready(RecordingInfo),
+    Playing { process: Box<dyn Process>, started: Instant, info: RecordingInfo },
+}
+
 pub type Opener = Box<dyn Fn() -> pd200x_core::Result<Device> + Send + Sync>;
 
 pub struct Hub {
@@ -77,11 +105,14 @@ pub struct Hub {
     onboard: Mutex<Option<(Tone, Lighting)>>,
     config_dir: PathBuf,
     runner: Box<dyn Runner>,
+    spawner: Box<dyn Spawner>,
+    rec: Mutex<Rec>,
+    rec_path: PathBuf,
     open: Opener,
 }
 
 impl Hub {
-    pub fn new(config_dir: PathBuf, runner: Box<dyn Runner>, open: Opener) -> Hub {
+    pub fn new(config_dir: PathBuf, runner: Box<dyn Runner>, spawner: Box<dyn Spawner>, open: Opener) -> Hub {
         let settings = store::load(&config_dir).unwrap_or_default();
         Hub {
             device: Mutex::new(None),
@@ -91,6 +122,9 @@ impl Hub {
             onboard: Mutex::new(None),
             config_dir,
             runner,
+            spawner,
+            rec: Mutex::new(Rec::Idle),
+            rec_path: std::env::temp_dir().join(format!("pd200x-control-{}.wav", std::process::id())),
             open,
         }
     }
@@ -303,6 +337,113 @@ impl Hub {
     }
 }
 
+impl Hub {
+    /// Starts a test recording from the microphone's PipeWire source; stops a playback first.
+    pub fn start_recording(&self) -> CmdResult<()> {
+        let mut rec = self.rec.lock().unwrap();
+        finish(&mut rec);
+        let source = pipewire::source_id(self.runner.as_ref())?;
+        let _ = std::fs::remove_file(&self.rec_path);
+        let process = recording::start_recording(self.spawner.as_ref(), source, &self.rec_path)?;
+        *rec = Rec::Recording { process, started: Instant::now() };
+        Ok(())
+    }
+
+    /// Stops the recording or the playback, whichever runs.
+    pub fn stop_recording(&self) -> CmdResult<RecordingStatus> {
+        let mut rec = self.rec.lock().unwrap();
+        self.stop(&mut rec)?;
+        Ok(status_of(&rec))
+    }
+
+    fn stop(&self, rec: &mut Rec) -> CmdResult<()> {
+        match std::mem::replace(rec, Rec::Idle) {
+            Rec::Recording { mut process, .. } => {
+                process.interrupt();
+                process.wait();
+                *rec = Rec::Ready(recording::analyze_file(&self.rec_path)?);
+            }
+            Rec::Playing { mut process, info, .. } => {
+                process.interrupt();
+                process.wait();
+                *rec = Rec::Ready(info);
+            }
+            other => *rec = other,
+        }
+        Ok(())
+    }
+
+    pub fn play_recording(&self) -> CmdResult<()> {
+        let mut rec = self.rec.lock().unwrap();
+        self.stop(&mut rec)?;
+        let Rec::Ready(info) = &*rec else {
+            return Err(Error::InvalidValue("no recording".into()).into());
+        };
+        let info = info.clone();
+        let process = recording::start_playback(self.spawner.as_ref(), &self.rec_path)?;
+        *rec = Rec::Playing { process, started: Instant::now(), info };
+        Ok(())
+    }
+
+    /// Where the recording stands; stops it at the time limit and notices
+    /// when a playback has ended.
+    pub fn recording_status(&self) -> CmdResult<RecordingStatus> {
+        let mut rec = self.rec.lock().unwrap();
+        let over = match &mut *rec {
+            Rec::Recording { started, .. } => started.elapsed() >= Duration::from_secs(recording::MAX_SECONDS.into()),
+            Rec::Playing { process, .. } => process.finished(),
+            _ => false,
+        };
+        if over {
+            self.stop(&mut rec)?;
+        }
+        Ok(status_of(&rec))
+    }
+
+    /// Stops what runs and deletes the file (when the app quits).
+    pub fn cleanup(&self) {
+        let mut rec = self.rec.lock().unwrap();
+        finish(&mut rec);
+        let _ = std::fs::remove_file(&self.rec_path);
+    }
+}
+
+impl Drop for Hub {
+    fn drop(&mut self) {
+        self.cleanup();
+    }
+}
+
+/// Ends a running process without analysing; a finished recording stays.
+fn finish(rec: &mut Rec) {
+    match std::mem::replace(rec, Rec::Idle) {
+        Rec::Recording { mut process, .. } => {
+            process.interrupt();
+            process.wait();
+        }
+        Rec::Playing { mut process, info, .. } => {
+            process.interrupt();
+            process.wait();
+            *rec = Rec::Ready(info);
+        }
+        other => *rec = other,
+    }
+}
+
+fn status_of(rec: &Rec) -> RecordingStatus {
+    let ms = |t: &Instant| t.elapsed().as_millis().min(u128::from(u32::MAX)) as u32;
+    match rec {
+        Rec::Idle => RecordingStatus { state: RecordingState::Idle, elapsed_ms: 0, info: None },
+        Rec::Recording { started, .. } => {
+            RecordingStatus { state: RecordingState::Recording, elapsed_ms: ms(started), info: None }
+        }
+        Rec::Ready(info) => RecordingStatus { state: RecordingState::Ready, elapsed_ms: 0, info: Some(info.clone()) },
+        Rec::Playing { started, info, .. } => {
+            RecordingStatus { state: RecordingState::Playing, elapsed_ms: ms(started), info: Some(info.clone()) }
+        }
+    }
+}
+
 /// Tone and lighting as saved, as device changes.
 fn saved_changes(s: &Settings) -> Vec<Change> {
     let mut out = Vec::new();
@@ -384,6 +525,85 @@ mod tests {
         assert_eq!(tone.source, None);
     }
 
+    struct FakeProcess {
+        done: bool,
+    }
+
+    impl Process for FakeProcess {
+        fn interrupt(&mut self) {
+            self.done = true;
+        }
+        fn finished(&mut self) -> bool {
+            self.done
+        }
+        fn wait(&mut self) {}
+    }
+
+    /// pw-record writes a second of a −6 dB tone to its file; pw-play ends at once.
+    struct FakeSpawner;
+
+    impl Spawner for FakeSpawner {
+        fn spawn(&self, program: &str, args: &[String]) -> std::io::Result<Box<dyn Process>> {
+            if program == "pw-record" {
+                let samples: Vec<i16> = (0..48_000).map(|i| ((i as f32 * 0.05).sin() * 16_384.0) as i16).collect();
+                std::fs::write(args.last().unwrap(), recording::wav(48_000, &samples))?;
+            }
+            Ok(Box::new(FakeProcess { done: program == "pw-play" }))
+        }
+    }
+
+    struct FakePipeWire;
+
+    impl Runner for FakePipeWire {
+        fn run(&self, program: &str, _: &[&str]) -> std::io::Result<pipewire::Output> {
+            let stdout = if program == "pw-dump" {
+                r#"[{"id": 105, "info": {"props": {"media.class": "Audio/Source", "node.name": "alsa_input.usb-352f_PD200X"}}}]"#
+            } else {
+                "Volume: 1.0"
+            };
+            Ok(pipewire::Output { success: true, stdout: stdout.into(), stderr: String::new() })
+        }
+    }
+
+    #[test]
+    fn records_analyses_and_plays_back() {
+        let tmp = tempfile::tempdir().unwrap();
+        let hub = Hub::new(
+            tmp.path().to_path_buf(),
+            Box::new(FakePipeWire),
+            Box::new(FakeSpawner),
+            Box::new(|| Ok(Device::new(Box::new(Simulator::new())))),
+        );
+        assert_eq!(hub.recording_status().unwrap().state, RecordingState::Idle);
+        hub.start_recording().unwrap();
+        assert_eq!(hub.recording_status().unwrap().state, RecordingState::Recording);
+        let done = hub.stop_recording().unwrap();
+        assert_eq!(done.state, RecordingState::Ready);
+        let info = done.info.unwrap();
+        assert_eq!(info.duration_ms, 1000);
+        assert!((info.peak_db - -6.0).abs() < 0.2);
+
+        hub.play_recording().unwrap();
+        // The fake playback has ended by now; the status notices.
+        assert_eq!(hub.recording_status().unwrap().state, RecordingState::Ready);
+        let path = hub.rec_path.clone();
+        assert!(path.exists());
+        drop(hub);
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn playing_without_a_recording_fails() {
+        let tmp = tempfile::tempdir().unwrap();
+        let hub = Hub::new(
+            tmp.path().to_path_buf(),
+            Box::new(FakePipeWire),
+            Box::new(FakeSpawner),
+            Box::new(|| Ok(Device::new(Box::new(Simulator::new())))),
+        );
+        assert_eq!(hub.play_recording().unwrap_err().kind, "invalidValue");
+    }
+
     #[test]
     fn reads_the_device_state_on_connect() {
         let tmp = tempfile::tempdir().unwrap();
@@ -394,6 +614,7 @@ mod tests {
         let hub = Hub::new(
             tmp.path().to_path_buf(),
             Box::new(pipewire::SystemRunner),
+            Box::new(recording::SystemSpawner),
             Box::new(move || Ok(Device::new(Box::new(s2.clone())))),
         );
         hub.connect();
@@ -418,6 +639,7 @@ mod tests {
         let hub = Hub::new(
             tmp.path().to_path_buf(),
             Box::new(pipewire::SystemRunner),
+            Box::new(recording::SystemSpawner),
             Box::new(move || Ok(Device::new(Box::new(s2.clone())))),
         );
         hub.connect();

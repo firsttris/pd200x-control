@@ -11,9 +11,12 @@ import {
   type EqBand,
   type Level,
   MAX_BOOST_DB,
+  MAX_RECORDING_SECONDS,
   PRESETS,
   type Profile,
   type Proposal,
+  type RecordingInfo,
+  type RecordingStatus,
   type Snapshot,
   TARGET_PEAK_DB,
   type Tone,
@@ -32,6 +35,8 @@ export interface MockState {
   latency: number;
   /** Every command with its arguments, oldest first. */
   calls: { cmd: string; args: Args }[];
+  /** The test recording; `startedAt` is a Date.now() value. */
+  recording: { state: RecordingStatus["state"]; startedAt: number; info: RecordingInfo | null };
 }
 
 function fail(kind: string, message = kind): never {
@@ -81,6 +86,16 @@ export function uniqueId(name: string, profiles: Profile[]): string {
   return `${base}-${n}`;
 }
 
+/** A recording of the simulated voice: peaks at `voiceDb` plus the boost. */
+export function fakeRecording(durationMs: number, peakDb: number): RecordingInfo {
+  const scale = 10 ** (peakDb / 20);
+  const waveform = Array.from({ length: 120 }, (_, i) => {
+    const speech = Math.abs(Math.sin(i * 0.37) * Math.sin(i * 0.11));
+    return Math.round(Math.min(1, scale * (0.15 + speech * 0.85)) * 1000) / 1000;
+  });
+  return { durationMs: Math.round(durationMs), peakDb: round1(peakDb), meanDb: round1(peakDb - 16), waveform };
+}
+
 export function initialState(): MockState {
   return {
     snapshot: {
@@ -96,6 +111,7 @@ export function initialState(): MockState {
     voiceDb: -21.5,
     latency: 30,
     calls: [],
+    recording: { state: "idle", startedAt: 0, info: null },
   };
 }
 
@@ -180,6 +196,43 @@ export function createMockBackend(state: MockState = initialState()) {
       state.snapshot.boostDb = Number(boostDb);
       if (Number(boostDb) > 0) settings().boostDb = Number(boostDb);
       return null;
+    },
+    start_recording: () => {
+      needDevice();
+      state.recording = { state: "recording", startedAt: Date.now(), info: state.recording.info };
+      return null;
+    },
+    stop_recording: () => {
+      const r = state.recording;
+      if (r.state === "recording") {
+        const ms = Math.max(300, Date.now() - r.startedAt);
+        state.recording = {
+          state: "ready",
+          startedAt: 0,
+          info: fakeRecording(ms, state.voiceDb + (state.snapshot.boostDb ?? 0)),
+        };
+      } else if (r.state === "playing") {
+        state.recording = { ...r, state: "ready" };
+      }
+      return handlers.recording_status({});
+    },
+    play_recording: () => {
+      if (!state.recording.info) fail("invalidValue", "no recording");
+      state.recording = { ...state.recording, state: "playing", startedAt: Date.now() };
+      return null;
+    },
+    recording_status: (): RecordingStatus => {
+      const r = state.recording;
+      const elapsed = Date.now() - r.startedAt;
+      if (r.state === "recording" && elapsed >= MAX_RECORDING_SECONDS * 1000) handlers.stop_recording({});
+      if (r.state === "playing" && elapsed >= (r.info?.durationMs ?? 0)) state.recording = { ...r, state: "ready" };
+      const now = state.recording;
+      const active = now.state === "recording" || now.state === "playing";
+      return {
+        state: now.state,
+        elapsedMs: active ? Date.now() - now.startedAt : 0,
+        info: now.state === "recording" ? null : now.info,
+      };
     },
     set_restore_on_connect: ({ on }) => {
       settings().restoreOnConnect = Boolean(on);

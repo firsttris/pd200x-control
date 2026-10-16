@@ -12,6 +12,7 @@ pub mod model;
 pub mod pipewire;
 pub mod presets;
 pub mod protocol;
+pub mod recording;
 pub mod sim;
 pub mod store;
 pub mod transport;
