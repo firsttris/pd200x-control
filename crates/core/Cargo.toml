@@ -1,0 +1,22 @@
+[package]
+name = "pd200x-core"
+description = "Core library of pd200x-control: USB HID protocol of the Maono PD200X/PD200XS, live level, PipeWire boost, settings"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[features]
+default = []
+# Derives specta::Type for all public data types (used by the Tauri app).
+specta = ["dep:specta"]
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+specta = { workspace = true, optional = true }
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3"

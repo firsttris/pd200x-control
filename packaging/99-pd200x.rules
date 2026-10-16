@@ -1,0 +1,6 @@
+# Maono PD200X / PD200XS: lets the logged-in user open the microphone's hidraw
+# node (gain, EQ, lighting, level). Install with:
+#   sudo cp packaging/99-pd200x.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+# then plug the microphone in again.
+KERNEL=="hidraw*", ATTRS{idVendor}=="352f", ATTRS{idProduct}=="0104", TAG+="uaccess"

@@ -1,0 +1,23 @@
+[package]
+name = "pd200x-cli"
+description = "pd200x – control the Maono PD200X/PD200XS microphone from the command line on Linux"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "pd200x"
+path = "src/main.rs"
+
+[dependencies]
+pd200x-core.workspace = true
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+serde_json.workspace = true
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+tempfile = "3"

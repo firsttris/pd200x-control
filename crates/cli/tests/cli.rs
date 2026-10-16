@@ -1,0 +1,91 @@
+//! The CLI end to end against the simulated microphone, with its own config
+//! folder and no PipeWire tools on PATH.
+
+use assert_cmd::Command;
+use predicates::str::contains;
+use std::path::Path;
+
+fn pd200x(config: &Path) -> Command {
+    let mut cmd = Command::cargo_bin("pd200x").unwrap();
+    cmd.env("PD200X_SIMULATOR", "1").env("XDG_CONFIG_HOME", config).env("PATH", config);
+    cmd
+}
+
+fn settings(config: &Path) -> serde_json::Value {
+    let text = std::fs::read_to_string(config.join("pd200x-control/settings.json")).unwrap();
+    serde_json::from_str(&text).unwrap()
+}
+
+#[test]
+fn status_shows_the_simulated_microphone() {
+    let tmp = tempfile::tempdir().unwrap();
+    pd200x(tmp.path())
+        .arg("status")
+        .assert()
+        .success()
+        .stdout(contains("PD200X  connected"))
+        .stdout(contains("Gain          70 / 100"))
+        .stdout(contains("Boost         unavailable"));
+}
+
+#[test]
+fn status_as_json() {
+    let tmp = tempfile::tempdir().unwrap();
+    let out = pd200x(tmp.path()).args(["status", "--json"]).assert().success().get_output().stdout.clone();
+    let v: serde_json::Value = serde_json::from_slice(&out).unwrap();
+    assert_eq!(v["live"]["gain"], 70);
+    assert_eq!(v["live"]["headphone"], 50);
+    assert!(v["boostDb"].is_null());
+}
+
+#[test]
+fn eq_preset_and_dynamics_are_saved() {
+    let tmp = tempfile::tempdir().unwrap();
+    pd200x(tmp.path()).args(["eq", "natural"]).assert().success();
+    pd200x(tmp.path()).args(["compressor", "-9"]).assert().success();
+    pd200x(tmp.path()).args(["limiter", "off"]).assert().success();
+    let s = settings(tmp.path());
+    assert_eq!(s["tone"]["source"], "natural");
+    assert_eq!(s["tone"]["eq"][2]["frequency"], 1320);
+    assert_eq!(s["tone"]["compressor"]["thresholdDb"], -9.0);
+    assert_eq!(s["tone"]["limiter"]["enabled"], false);
+    pd200x(tmp.path()).arg("restore").assert().success().stdout(contains("Restored"));
+}
+
+#[test]
+fn light_settings_are_saved() {
+    let tmp = tempfile::tempdir().unwrap();
+    pd200x(tmp.path()).args(["light", "cyan"]).assert().success();
+    pd200x(tmp.path()).args(["light", "brightness", "80"]).assert().success();
+    pd200x(tmp.path()).args(["light", "linkage", "on"]).assert().success();
+    let s = settings(tmp.path());
+    assert_eq!(s["lighting"]["color"], "cyan");
+    assert_eq!(s["lighting"]["brightness"], 80);
+    assert_eq!(s["lighting"]["linkage"], true);
+    pd200x(tmp.path()).arg("status").assert().stdout(contains("Light         cyan, 80 %, off while muted"));
+}
+
+#[test]
+fn simple_device_commands() {
+    let tmp = tempfile::tempdir().unwrap();
+    for args in [&["gain", "80"][..], &["mute", "toggle"], &["monitor", "on"], &["headphone", "30"], &["nc", "25"]] {
+        pd200x(tmp.path()).args(args).assert().success();
+    }
+}
+
+#[test]
+fn bad_input_is_explained() {
+    let tmp = tempfile::tempdir().unwrap();
+    pd200x(tmp.path()).args(["gain", "150"]).assert().failure().stderr(contains("0–100"));
+    pd200x(tmp.path()).args(["eq", "loud"]).assert().failure().stderr(contains("pd200x eq list"));
+    pd200x(tmp.path()).args(["light", "pink"]).assert().failure().stderr(contains("colours"));
+    pd200x(tmp.path()).args(["compressor", "-60"]).assert().failure().stderr(contains("between -40 and 0"));
+    pd200x(tmp.path()).arg("boost").assert().failure().stderr(contains("pw-dump is not installed"));
+}
+
+#[test]
+fn restore_without_saved_settings() {
+    let tmp = tempfile::tempdir().unwrap();
+    pd200x(tmp.path()).arg("restore").assert().success().stdout(contains("Nothing saved yet"));
+    pd200x(tmp.path()).args(["eq", "list"]).assert().success().stdout(contains("low_cut_mid_boost"));
+}
