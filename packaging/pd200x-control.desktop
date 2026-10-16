@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=pd200x-control
+GenericName=Microphone settings
+Comment=Control the Maono PD200X/PD200XS microphone
+Exec=@BIN_DIR@/pd200x-control.AppImage
+Icon=pd200x-control
+Categories=AudioVideo;Audio;Settings;
+Keywords=maono;pd200x;pd200xs;microphone;mic;gain;eq;rgb;
+StartupWMClass=pd200x-control

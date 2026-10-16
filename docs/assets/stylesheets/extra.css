@@ -1,0 +1,23 @@
+/* Colours of the app (dark ground, blue accent) */
+:root {
+  --md-primary-fg-color: #16181c;
+  --md-primary-fg-color--light: #262930;
+  --md-primary-fg-color--dark: #0e0f11;
+  --md-accent-fg-color: #2f6fe0;
+}
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #0e0f11;
+  --md-default-bg-color: #16181c;
+  --md-accent-fg-color: #6ea8ff;
+  --md-typeset-a-color: #8fb4ff;
+}
+/* Screenshots: rounded with a shadow, never wider than the text */
+.md-typeset img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .18);
+}
+.md-typeset table:not([class]) {
+  font-size: .75rem;
+}
