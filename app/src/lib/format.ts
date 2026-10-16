@@ -33,3 +33,12 @@ export function formatHz(hz: number): string {
   const k = hz / 1000;
   return `${formatNumber(k, k < 10 && !Number.isInteger(k) ? 1 : 0)} kHz`;
 }
+
+/** PipeWire and the desktops show the volume in percent; it is cubic: 175 % is +14,6 dB. */
+export function percentToDb(percent: number): number {
+  return Math.round(60 * Math.log10(percent / 100) * 10) / 10;
+}
+
+export function dbToPercent(db: number): number {
+  return Math.round(10 ** (db / 60) * 100);
+}

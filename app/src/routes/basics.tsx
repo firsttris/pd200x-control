@@ -7,7 +7,7 @@ import { Card, CardTitle, Value } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { MAX_BOOST_DB } from "@/lib/bindings";
-import { formatDb, formatNumber } from "@/lib/format";
+import { dbToPercent, formatDb, formatNumber, percentToDb } from "@/lib/format";
 import { useApply, useDraft, useLevel, useSetBoost, useSnapshot } from "@/lib/queries";
 import { cn, num } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -62,15 +62,6 @@ function LevelPanel({ muted, connected, onMute }: { muted: boolean; connected: b
       </Button>
     </aside>
   );
-}
-
-/** PipeWire and KDE show the volume in percent; it is cubic: 175 % is +14,6 dB. */
-export function percentToDb(percent: number): number {
-  return Math.round(60 * Math.log10(percent / 100) * 10) / 10;
-}
-
-export function dbToPercent(db: number): number {
-  return Math.round(10 ** (db / 60) * 100);
 }
 
 const MAX_PERCENT = dbToPercent(MAX_BOOST_DB);

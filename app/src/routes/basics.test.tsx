@@ -54,7 +54,8 @@ describe("Grundlagen", () => {
     await user.click(await screen.findByRole("button", { name: "Pegel einmessen" }));
     await user.click(screen.getByRole("button", { name: "Los geht's" }));
     const dialog = await screen.findByRole("dialog");
-    expect(await within(dialog).findByText("+12,5 dB")).toBeInTheDocument();
+    expect(await within(dialog).findByText("162 %")).toBeInTheDocument();
+    expect(within(dialog).getByText("+12,5 dB")).toBeInTheDocument();
     expect(within(dialog).getByText("−9,0 dB")).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Übernehmen" }));
     await waitFor(() => expect(backend.state.snapshot.boostDb).toBe(12.5));

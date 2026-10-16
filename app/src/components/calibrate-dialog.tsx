@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { api, errorMessage } from "@/lib/api";
 import type { Proposal } from "@/lib/bindings";
-import { formatDb } from "@/lib/format";
+import { dbToPercent, formatDb } from "@/lib/format";
 import { useApplyCalibration, useLevel } from "@/lib/queries";
 import { num } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -88,7 +88,10 @@ export function CalibrateDialog({ disabled }: { disabled?: boolean }) {
                 </div>
                 <div className="rounded-xl border bg-card-inset p-3">
                   <dt className="text-xs text-muted-foreground">{m.basics_boost()}</dt>
-                  <dd className="font-mono text-lg">{formatDb(num(step.proposal.boostDb), { signed: true })}</dd>
+                  <dd className="font-mono text-lg">{dbToPercent(num(step.proposal.boostDb))} %</dd>
+                  <dd className="text-xs text-muted-foreground">
+                    {formatDb(num(step.proposal.boostDb), { signed: true })}
+                  </dd>
                 </div>
                 <div className="rounded-xl border bg-card-inset p-3">
                   <dt className="text-xs text-muted-foreground">{m.calibrate_expected()}</dt>

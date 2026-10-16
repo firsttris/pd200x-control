@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dbToPercent, percentToDb } from "./basics";
+import { dbToPercent, percentToDb } from "./format";
 
 describe("boost in percent like KDE", () => {
   it("175 % is +14,6 dB", () => {
