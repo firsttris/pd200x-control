@@ -1,0 +1,91 @@
+name: Release
+
+# A tag vX.Y.Z (from the "Bump version" button or pushed from a checkout) runs the checks, builds the
+# CLI, the AppImage, the .deb and the .rpm, and creates the GitHub release with these files.
+# The checks are skipped when main's CI already passed for the code (a release commit from "Bump
+# version" changes only versions), so the build starts right away.
+# Run by hand on a branch it only checks and builds (no release), e.g. to try the packaging.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tested:
+    uses: firsttris/workflows/.github/workflows/tested-on-main.yml@v1
+    permissions:
+      actions: read
+      contents: read
+
+  checks:
+    needs: tested
+    if: needs.tested.outputs.tested != 'true'
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    name: Build · CLI, AppImage, .deb, .rpm
+    needs: [tested, checks]
+    # The checks either passed or were not needed
+    if: ${{ !cancelled() && needs.tested.result == 'success' && needs.checks.result != 'failure' }}
+    # Older glibc than the test runners, so the binaries also run on older distributions
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: System packages (Tauri bundler)
+        uses: firsttris/workflows/actions/apt-install@v1
+        with:
+          packages: >-
+            libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev patchelf file
+          recommends: "false"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: app/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: app
+      - run: cargo build --release --locked -p pd200x-cli
+      - run: pnpm tauri build --bundles appimage,deb,rpm
+        working-directory: app
+        env:
+          NO_STRIP: "1"
+      - name: Collect release files
+        run: |
+          set -euo pipefail
+          version=$(grep -m1 -E '^version *= *"' Cargo.toml | cut -d'"' -f2)
+          mkdir -p dist
+          tar -czf "dist/pd200x-cli-${version}-x86_64-linux.tar.gz" -C target/release pd200x
+          cp target/release/bundle/appimage/*.AppImage target/release/bundle/deb/*.deb \
+            target/release/bundle/rpm/*.rpm dist/
+          cp packaging/99-pd200x.rules dist/
+          (cd dist && sha256sum -- * > SHA256SUMS)
+          ls -l dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    needs: build
+    # run by hand on a branch: only checks and build
+    if: ${{ !cancelled() && needs.build.result == 'success' && startsWith(github.ref, 'refs/tags/v') }}
+    uses: firsttris/workflows/.github/workflows/github-release.yml@v1
+    with:
+      version-file: Cargo.toml
+      release-artifact: dist
+    permissions:
+      contents: write
