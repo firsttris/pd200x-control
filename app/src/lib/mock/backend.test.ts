@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createMockBackend, propose, uniqueId } from "./backend";
 
 const backend = () => createMockBackend();
@@ -76,6 +76,8 @@ describe("rules shared with the core", () => {
 
 describe("mock recording", () => {
   it("stops by itself at the time limit and after playback", async () => {
+    // A fixed clock: on a slow runner a millisecond passes between the calls.
+    vi.useFakeTimers({ now: new Date("2026-06-15T09:42:00Z"), toFake: ["Date"] });
     const b = createMockBackend();
     b.state.latency = 0;
     await expect(b.invoke("play_recording", {})).rejects.toMatchObject({ kind: "invalidValue" });
@@ -85,5 +87,6 @@ describe("mock recording", () => {
     await b.invoke("play_recording", {});
     b.state.recording.startedAt -= 40_000;
     expect(await b.invoke("recording_status", {})).toMatchObject({ state: "ready" });
+    vi.useRealTimers();
   });
 });
