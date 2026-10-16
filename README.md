@@ -9,9 +9,12 @@ Finds the right level for a quiet dynamic microphone in five seconds. Free, open
 [![CI](https://github.com/firsttris/pd200x-control/actions/workflows/ci.yml/badge.svg)](https://github.com/firsttris/pd200x-control/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/firsttris/pd200x-control?logo=github&label=release)](https://github.com/firsttris/pd200x-control/releases/latest)
 [![Docs](https://img.shields.io/badge/docs-firsttris.github.io%2Fpd200x--control-16181c?logo=materialformkdocs&logoColor=white)](https://firsttris.github.io/pd200x-control/)
+[![Platform](https://img.shields.io/badge/platform-Linux%20x86__64-lightgrey?logo=linux&logoColor=white)](https://firsttris.github.io/pd200x-control/installation.html)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)<br>
+[![Rust](https://img.shields.io/badge/built%20with-Rust-dea584?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tauri](https://img.shields.io/badge/app-Tauri%202-24c8db?logo=tauri&logoColor=white)](https://tauri.app/)
 [![PipeWire](https://img.shields.io/badge/audio-PipeWire-4f46e5)](https://pipewire.org/)
-[![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 
 [Why](#-why-pd200x-control) •
 [Install](#-install) •
