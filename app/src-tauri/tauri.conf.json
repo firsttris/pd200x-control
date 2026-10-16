@@ -26,7 +26,7 @@
   "bundle": {
     "active": true,
     "targets": ["appimage", "deb", "rpm"],
-    "category": "Audio",
+    "category": "Utility",
     "shortDescription": "Control the Maono PD200X/PD200XS microphone on Linux",
     "longDescription": "pd200x-control sets gain, headphone monitoring, noise cancellation, EQ, compressor, limiter and the ring light of the Maono PD200X and PD200XS USB microphones on Linux, shows the live level, boosts quiet dynamic microphones through PipeWire and finds the right level for your voice in five seconds.",
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png"],
