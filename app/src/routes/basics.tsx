@@ -109,24 +109,26 @@ function BoostControl({
         onValueChange={draft.change}
         onValueCommit={draft.commit}
       />
-      <div className="flex justify-between text-[11px] text-muted-foreground">
+      <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
         <span>100 %</span>
-        <span>{available ? m.basics_boost_kde() : m.error_noAudioSource()}</span>
+        {available ? (
+          <div className="flex items-center gap-2" title={m.basics_protect_hint()}>
+            <Switch
+              id="protect"
+              className="scale-90"
+              checked={protectedFromApps}
+              disabled={setProtected.isPending}
+              onCheckedChange={(on) => setProtected.mutate(on)}
+            />
+            <label htmlFor="protect" className="text-xs font-medium text-foreground">
+              {m.basics_protect()}
+            </label>
+            <span className="text-xs max-md:hidden">{m.basics_protect_short()}</span>
+          </div>
+        ) : (
+          <span>{m.error_noAudioSource()}</span>
+        )}
         <span>{MAX_PERCENT} %</span>
-      </div>
-      <div className="flex items-start gap-2.5 pt-1">
-        <Switch
-          id="protect"
-          checked={protectedFromApps}
-          disabled={!available || setProtected.isPending}
-          onCheckedChange={(on) => setProtected.mutate(on)}
-        />
-        <div className="flex flex-col gap-0.5">
-          <label htmlFor="protect" className="font-medium">
-            {m.basics_protect()}
-          </label>
-          <span className="text-xs leading-relaxed text-muted-foreground">{m.basics_protect_hint()}</span>
-        </div>
       </div>
     </div>
   );

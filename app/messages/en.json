@@ -30,8 +30,7 @@
   "basics_gain_max": "Hardware at its maximum. Only the system's microphone volume gives more.",
   "basics_boost": "Microphone volume (system)",
   "basics_boost_on": "Microphone volume above 100 % on",
-  "basics_boost_hint": "above 100 % amplifies in software",
-  "basics_boost_kde": "the same control as in your system's sound settings",
+  "basics_boost_hint": "as in the sound settings, above 100 % in software",
   "basics_headphones": "Headphones",
   "basics_monitor": "Monitoring",
   "basics_monitor_hint": "no delay",
@@ -135,5 +134,6 @@
   "recording_loud": "Very loud – it may clip.",
   "recording_good": "Well balanced.",
   "basics_protect": "Protect from apps",
-  "basics_protect_hint": "Teams, Slack and browsers no longer turn the volume down during calls. The control in the system settings cannot change it either then, only this app. Sound stops for a moment when switching."
+  "basics_protect_hint": "Teams, Slack and browsers no longer turn the volume down during calls. The control in the system settings cannot change it either then, only this app. Sound stops for a moment when switching.",
+  "basics_protect_short": "Teams, Slack and browsers no longer turn it down"
 }

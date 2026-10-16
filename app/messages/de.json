@@ -30,8 +30,7 @@
   "basics_gain_max": "Hardware am Maximum. Mehr geht nur über die Mikrofon-Lautstärke des Systems.",
   "basics_boost": "Mikrofon-Lautstärke (System)",
   "basics_boost_on": "Mikrofon-Lautstärke über 100 % an",
-  "basics_boost_hint": "über 100 % verstärkt per Software",
-  "basics_boost_kde": "derselbe Regler wie in den Audio-Einstellungen deines Systems",
+  "basics_boost_hint": "wie in den Audio-Einstellungen, über 100 % per Software",
   "basics_headphones": "Kopfhörer",
   "basics_monitor": "Mithören",
   "basics_monitor_hint": "ohne Verzögerung",
@@ -135,5 +134,6 @@
   "recording_loud": "Sehr laut – es kann übersteuern.",
   "recording_good": "Gut ausgesteuert.",
   "basics_protect": "Vor Apps schützen",
-  "basics_protect_hint": "Teams, Slack und Browser regeln die Lautstärke im Call nicht mehr herunter. Auch der Regler in den Systemeinstellungen kann sie dann nicht ändern, nur diese App. Beim Umschalten setzt der Ton kurz aus."
+  "basics_protect_hint": "Teams, Slack und Browser regeln die Lautstärke im Call nicht mehr herunter. Auch der Regler in den Systemeinstellungen kann sie dann nicht ändern, nur diese App. Beim Umschalten setzt der Ton kurz aus.",
+  "basics_protect_short": "Teams, Slack und Browser regeln sie nicht mehr herunter"
 }
