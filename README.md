@@ -9,18 +9,13 @@ Finds the right level for a quiet dynamic microphone in five seconds. Free, open
 [![CI](https://github.com/firsttris/pd200x-control/actions/workflows/ci.yml/badge.svg)](https://github.com/firsttris/pd200x-control/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/firsttris/pd200x-control?logo=github&label=release)](https://github.com/firsttris/pd200x-control/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/firsttris/pd200x-control/total?logo=github&label=downloads)](https://github.com/firsttris/pd200x-control/releases)
-[![Docs](https://img.shields.io/badge/docs-firsttris.github.io%2Fpd200x--control-16181c?logo=materialformkdocs&logoColor=white)](https://firsttris.github.io/pd200x-control/)
+[![Docs](https://img.shields.io/badge/docs-firsttris.github.io-16181c?logo=materialformkdocs&logoColor=white)](https://firsttris.github.io/pd200x-control/)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)<br>
-[![Microphone](https://img.shields.io/badge/microphone-Maono%20PD200X%20%7C%20PD200XS-e8590c)](https://firsttris.github.io/pd200x-control/faq.html#does-it-work-with-the-pd200xs)
-[![Platform](https://img.shields.io/badge/platform-Linux%20x86__64-lightgrey?logo=linux&logoColor=white)](https://firsttris.github.io/pd200x-control/installation.html)
-[![PipeWire](https://img.shields.io/badge/audio-PipeWire-4f46e5)](https://pipewire.org/)
-[![Packages](https://img.shields.io/badge/packages-AppImage%20%7C%20.deb%20%7C%20.rpm-2496ed)](https://github.com/firsttris/pd200x-control/releases/latest)
-[![UI](https://img.shields.io/badge/UI-Deutsch%20%7C%20English-1d4ed8)](https://firsttris.github.io/pd200x-control/app.html#menu)<br>
+[![Microphone](https://img.shields.io/badge/microphone-PD200X%20%7C%20PD200XS-e8590c)](https://firsttris.github.io/pd200x-control/faq.html#does-it-work-with-the-pd200xs)
+[![Linux](https://img.shields.io/badge/Linux-PipeWire-4f46e5?logo=linux&logoColor=white)](https://firsttris.github.io/pd200x-control/installation.html)
 [![Rust](https://img.shields.io/badge/built%20with-Rust-dea584?logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Tauri](https://img.shields.io/badge/app-Tauri%202-24c8db?logo=tauri&logoColor=white)](https://tauri.app/)
-[![React](https://img.shields.io/badge/React-19-20232a?logo=react&logoColor=61dafb)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06b6d4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
 [Why](#-why-pd200x-control) •
 [Install](#-install) •
