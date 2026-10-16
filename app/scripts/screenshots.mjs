@@ -43,7 +43,7 @@ const demo = (page) =>
     s.snapshot.settings.boostDb = 14.6;
   });
 
-const page = await newPage({ viewport: { width: 1280, height: 1080 } });
+const page = await newPage({ viewport: { width: 1280, height: 860 } });
 let loads = 0;
 const open = async (path) => {
   // A fresh load also gives a fresh mock backend with the demo data.
