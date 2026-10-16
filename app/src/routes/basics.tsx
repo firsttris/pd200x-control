@@ -1,9 +1,11 @@
 import { CircleAlert, Mic, MicOff } from "lucide-react";
+import { useState } from "react";
 import { CalibrateDialog } from "@/components/calibrate-dialog";
 import { LevelMeter, METER_SCALE } from "@/components/level-meter";
 import { RecordingCard } from "@/components/recording-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle, Value } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { MAX_BOOST_DB } from "@/lib/bindings";
@@ -77,6 +79,8 @@ function BoostControl({
 }) {
   const setBoost = useSetBoost();
   const setProtected = useSetProtected();
+  // Switching restarts pipewire-pulse: ask first (null = no question open).
+  const [confirm, setConfirm] = useState<boolean | null>(null);
   const available = boostDb !== null;
   const db = num(boostDb);
   const draft = useDraft(dbToPercent(db), (p) => setBoost.mutate(percentToDb(p)), 120);
@@ -118,7 +122,7 @@ function BoostControl({
               className="scale-90"
               checked={protectedFromApps}
               disabled={setProtected.isPending}
-              onCheckedChange={(on) => setProtected.mutate(on)}
+              onCheckedChange={(on) => setConfirm(on)}
             />
             <label htmlFor="protect" className="text-xs font-medium text-foreground">
               {m.basics_protect()}
@@ -130,6 +134,26 @@ function BoostControl({
         )}
         <span>{MAX_PERCENT} %</span>
       </div>
+      <Dialog open={confirm !== null} onOpenChange={(open) => !open && setConfirm(null)}>
+        <DialogContent>
+          <DialogTitle>{m.basics_protect()}</DialogTitle>
+          {confirm && <DialogDescription>{m.protect_confirm_on()}</DialogDescription>}
+          <p className="leading-relaxed text-muted-foreground">{m.protect_confirm_restart()}</p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setConfirm(null)}>
+              {m.common_cancel()}
+            </Button>
+            <Button
+              onClick={() => {
+                if (confirm !== null) setProtected.mutate(confirm);
+                setConfirm(null);
+              }}
+            >
+              {confirm ? m.protect_switch_on() : m.protect_switch_off()}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

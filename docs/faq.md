@@ -27,7 +27,8 @@ The app only goes further than KDE's 150 %, up to 200 %.
 Teams, Slack and browsers use WebRTC's automatic gain control, which turns the system microphone
 volume down during a call and does not restore it. Turn on **Protect from apps** on the basics page
 (or `pd200x protect on`): PulseAudio clients may then no longer change it. Your level inside the call
-stays fine, the apps adjust it internally.
+stays fine, the apps adjust it internally. Restart running browsers and call apps once after
+switching: the restart of `pipewire-pulse` cuts their audio connection.
 
 ## Does the app have to keep running?
 

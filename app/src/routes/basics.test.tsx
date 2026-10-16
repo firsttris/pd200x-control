@@ -72,9 +72,15 @@ describe("Grundlagen", () => {
 });
 
 describe("protection from apps", () => {
-  it("switches it on", async () => {
+  it("asks first, then switches it on", async () => {
     const { backend, user } = await renderApp("/");
     await user.click(await screen.findByRole("switch", { name: "Vor Apps schützen" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(/einmal neu, sonst finden sie das Mikrofon nicht/)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Abbrechen" }));
+    expect(backend.state.snapshot.protected).toBe(false);
+    await user.click(screen.getByRole("switch", { name: "Vor Apps schützen" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Einschalten" }));
     await waitFor(() => expect(backend.state.snapshot.protected).toBe(true));
     expect(backend.state.calls.some((c) => c.cmd === "set_protected" && c.args.on === true)).toBe(true);
   });

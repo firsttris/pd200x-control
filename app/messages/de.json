@@ -135,5 +135,9 @@
   "recording_good": "Gut ausgesteuert.",
   "basics_protect": "Vor Apps schützen",
   "basics_protect_hint": "Teams, Slack und Browser regeln die Lautstärke im Call nicht mehr herunter. Auch der Regler in den Systemeinstellungen kann sie dann nicht ändern, nur diese App. Beim Umschalten setzt der Ton kurz aus.",
-  "basics_protect_short": "Teams, Slack und Browser regeln sie nicht mehr herunter"
+  "basics_protect_short": "Teams, Slack und Browser regeln sie nicht mehr herunter",
+  "protect_confirm_on": "Teams, Slack und Browser können die Mikrofon-Lautstärke dann nicht mehr herunterregeln. Auch der Regler in den Systemeinstellungen kann sie nicht mehr ändern, nur diese App.",
+  "protect_confirm_restart": "Beim Umschalten setzt der Ton kurz aus. Starte danach laufende Browser und Call-Apps (Teams, Slack, Discord …) einmal neu, sonst finden sie das Mikrofon nicht.",
+  "protect_switch_on": "Einschalten",
+  "protect_switch_off": "Ausschalten"
 }

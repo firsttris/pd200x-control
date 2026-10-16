@@ -135,5 +135,9 @@
   "recording_good": "Well balanced.",
   "basics_protect": "Protect from apps",
   "basics_protect_hint": "Teams, Slack and browsers no longer turn the volume down during calls. The control in the system settings cannot change it either then, only this app. Sound stops for a moment when switching.",
-  "basics_protect_short": "Teams, Slack and browsers no longer turn it down"
+  "basics_protect_short": "Teams, Slack and browsers no longer turn it down",
+  "protect_confirm_on": "Teams, Slack and browsers can then no longer turn the microphone volume down. The control in the system settings cannot change it either, only this app.",
+  "protect_confirm_restart": "Sound stops for a moment when switching. Restart running browsers and call apps (Teams, Slack, Discord …) once afterwards, or they will not find the microphone.",
+  "protect_switch_on": "Switch on",
+  "protect_switch_off": "Switch off"
 }
