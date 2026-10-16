@@ -73,18 +73,7 @@ export function useApplyCalibration() {
 }
 
 const SILENT: Level = { currentDb: -60, peakDb: -60, clipping: false };
-/** How fast the meter falls back, like the ballistics of a hardware meter. */
-const RELEASE_DB_PER_S = 18;
-
-/**
- * Meter ballistics: a rise shows at once, a fall at most `release` dB per
- * second, so room noise does not make the meter flicker. Pure.
- */
-export function smooth(previous: number, next: number, elapsedMs: number, release = RELEASE_DB_PER_S): number {
-  return Math.max(next, previous - (release * elapsedMs) / 1000);
-}
-
-/** The live level, polled about 16 times a second while mounted, with ballistics. */
+/** The live level, polled about 16 times a second while mounted. */
 export function useLevel(intervalMs = 60): Level {
   const [level, setLevel] = useState<Level>(SILENT);
   useEffect(() => {
@@ -92,9 +81,7 @@ export function useLevel(intervalMs = 60): Level {
     const tick = async () => {
       try {
         const l = await commands.level();
-        if (alive) {
-          setLevel((prev) => ({ ...l, currentDb: smooth(prev.currentDb ?? -60, l.currentDb ?? -60, intervalMs) }));
-        }
+        if (alive) setLevel(l);
       } catch {
         if (alive) setLevel(SILENT);
       }
@@ -107,18 +94,6 @@ export function useLevel(intervalMs = 60): Level {
     };
   }, [intervalMs]);
   return level;
-}
-
-/** A value that changes at most every `ms`, so numbers stay readable. */
-export function useSettled<T>(value: T, ms = 300): T {
-  const [shown, setShown] = useState(value);
-  const latest = useRef(value);
-  latest.current = value;
-  useEffect(() => {
-    const id = setInterval(() => setShown(latest.current), ms);
-    return () => clearInterval(id);
-  }, [ms]);
-  return shown;
 }
 
 /**

@@ -7,14 +7,13 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { MAX_BOOST_DB } from "@/lib/bindings";
 import { formatDb, formatNumber } from "@/lib/format";
-import { useApply, useDraft, useLevel, useSetBoost, useSettled, useSnapshot } from "@/lib/queries";
+import { useApply, useDraft, useLevel, useSetBoost, useSnapshot } from "@/lib/queries";
 import { cn, num } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 function LevelPanel({ muted, connected, onMute }: { muted: boolean; connected: boolean; onMute: () => void }) {
   const level = useLevel();
-  const shown = useSettled(level);
-  const peak = num(shown.peakDb, -60);
+  const peak = num(level.peakDb, -60);
   const inTarget = peak >= -12 && peak <= -6;
   return (
     <aside className="flex w-full shrink-0 flex-col gap-4 border-b p-5 lg:w-64 lg:border-r lg:border-b-0">
@@ -46,7 +45,7 @@ function LevelPanel({ muted, connected, onMute }: { muted: boolean; connected: b
         </div>
         <div className="rounded-xl border bg-card p-2.5">
           <div className="text-[11px] text-muted-foreground">{m.basics_current()}</div>
-          <div className="font-mono text-lg tabular-nums">{formatNumber(num(shown.currentDb, -60), 1)}</div>
+          <div className="font-mono text-lg tabular-nums">{formatNumber(num(level.currentDb, -60), 1)}</div>
         </div>
       </div>
       <Button
