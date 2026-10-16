@@ -101,6 +101,8 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _, _| tray::show_window(app)))
+        // Opens the window again at the size and place it was left at.
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .manage(hub.clone())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {

@@ -14,9 +14,10 @@
         "label": "main",
         "title": "pd200x-control",
         "width": 1180,
-        "height": 800,
+        "height": 860,
         "minWidth": 720,
-        "minHeight": 560
+        "minHeight": 560,
+        "center": true
       }
     ],
     "security": {

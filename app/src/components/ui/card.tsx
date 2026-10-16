@@ -2,7 +2,7 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 export function Card({ className, ...props }: React.ComponentProps<"section">) {
-  return <section className={cn("flex flex-col gap-4 rounded-2xl border bg-card p-5", className)} {...props} />;
+  return <section className={cn("flex flex-col gap-3.5 rounded-2xl border bg-card p-4", className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: React.ComponentProps<"h2">) {

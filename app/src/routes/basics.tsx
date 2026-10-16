@@ -17,7 +17,7 @@ function LevelPanel({ muted, connected, onMute }: { muted: boolean; connected: b
   const peak = num(level.peakDb, -60);
   const inTarget = peak >= -12 && peak <= -6;
   return (
-    <aside className="flex w-full shrink-0 flex-col gap-4 border-b p-5 lg:w-64 lg:border-r lg:border-b-0">
+    <aside className="flex w-full shrink-0 flex-col gap-3 border-b p-4 lg:w-64 lg:border-r lg:border-b-0">
       <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{m.basics_level()}</h2>
       <div className="flex min-h-48 flex-1 gap-3 max-lg:h-56">
         <div className="flex w-7 flex-col justify-between py-0.5 text-right font-mono text-[11px] text-muted-foreground">
@@ -171,7 +171,7 @@ export function BasicsPage() {
           connected={connected}
           onMute={() => apply.mutate({ kind: "mute", value: !live?.mute })}
         />
-        <main className="flex min-w-0 flex-1 flex-col gap-4 p-5 sm:px-7">
+        <main className="flex min-w-0 flex-1 flex-col gap-3 p-4 sm:px-6">
           <Card>
             <div className="flex items-center gap-3">
               <CardTitle>{m.basics_volume()}</CardTitle>
@@ -202,7 +202,7 @@ export function BasicsPage() {
             <BoostControl boostDb={data?.boostDb ?? null} remembered={num(data?.settings.boostDb, 10)} />
           </Card>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2">
             <Card>
               <CardTitle>{m.basics_headphones()}</CardTitle>
               <div className="flex items-center gap-2.5">

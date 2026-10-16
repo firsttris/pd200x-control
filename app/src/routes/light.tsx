@@ -31,7 +31,7 @@ export function LightPage() {
   const lit = light.enabled && !(light.linkage && data?.live?.mute);
   const colorName = COLORS.find((c) => c.id === light.color)?.label() ?? "";
   return (
-    <main className="flex h-full flex-col gap-5 overflow-auto p-5 sm:px-7 lg:flex-row">
+    <main className="flex h-full flex-col gap-4 overflow-auto p-4 sm:px-6 lg:flex-row">
       <div className="flex min-h-80 flex-1 flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border bg-[radial-gradient(ellipse_at_50%_45%,var(--card)_0%,var(--card-inset)_70%)] p-4">
         <MicIllustration color={light.color} brightness={brightness.value} lit={lit} />
         <p className="text-[13px] text-muted-foreground">

@@ -307,7 +307,7 @@ export function SoundPage() {
   const changeBand = (index: number, band: EqBand) => apply.mutate({ kind: "eqBand", value: { index, band } });
 
   return (
-    <main className="flex h-full flex-col gap-4 overflow-auto p-5 sm:px-7">
+    <main className="flex h-full flex-col gap-3 overflow-auto p-4 sm:px-6">
       <section className="flex flex-col gap-2.5" aria-labelledby="profiles-title">
         <div className="flex flex-wrap items-center gap-3">
           <h2 id="profiles-title" className="text-base font-semibold">
@@ -391,7 +391,7 @@ export function SoundPage() {
         />
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2">
         <DynamicsCard
           id="compressor"
           title={m.sound_compressor()}
