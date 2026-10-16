@@ -163,95 +163,98 @@ export function BasicsPage() {
   const connected = !!live;
   const gain = live?.gain ?? 0;
   return (
-    <div className="flex h-full flex-col lg:flex-row">
-      <LevelPanel
-        muted={!!live?.mute}
-        connected={connected}
-        onMute={() => apply.mutate({ kind: "mute", value: !live?.mute })}
-      />
-      <main className="flex min-w-0 flex-1 flex-col gap-4 overflow-auto p-5 sm:px-7">
-        <Card>
-          <div className="flex items-center gap-3">
-            <CardTitle>{m.basics_volume()}</CardTitle>
-            <CalibrateDialog disabled={!connected} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <SliderRow
-              id="gain"
-              label={m.basics_gain()}
-              hint={m.basics_gain_hint()}
-              value={gain}
-              max={100}
-              disabled={!connected}
-              onSend={(v) => apply.mutate({ kind: "gain", value: v })}
-            />
-            <div className="grid grid-cols-3 text-center text-[11px] text-muted-foreground">
-              <span>0–10 cm</span>
-              <span>11–30 cm</span>
-              <span>31–50 cm</span>
-            </div>
-            {connected && gain >= 100 && (
-              <p className="flex items-center gap-1.5 text-xs text-warning">
-                <CircleAlert className="size-3.5" aria-hidden />
-                {m.basics_gain_max()}
-              </p>
-            )}
-          </div>
-          <BoostControl boostDb={data?.boostDb ?? null} remembered={num(data?.settings.boostDb, 10)} />
-        </Card>
-
-        <div className="grid gap-4 md:grid-cols-2">
+    // The page scrolls as a whole, so the level column ends where the cards end.
+    <div className="h-full overflow-auto">
+      <div className="flex flex-col lg:flex-row">
+        <LevelPanel
+          muted={!!live?.mute}
+          connected={connected}
+          onMute={() => apply.mutate({ kind: "mute", value: !live?.mute })}
+        />
+        <main className="flex min-w-0 flex-1 flex-col gap-4 p-5 sm:px-7">
           <Card>
-            <CardTitle>{m.basics_headphones()}</CardTitle>
-            <div className="flex items-center gap-2.5">
-              <Switch
-                id="monitor"
-                checked={!!live?.monitor}
-                disabled={!connected}
-                onCheckedChange={(on) => apply.mutate({ kind: "monitor", value: on })}
-              />
-              <label htmlFor="monitor" className="font-medium">
-                {m.basics_monitor()}
-              </label>
-              <span className="text-xs text-muted-foreground">{m.basics_monitor_hint()}</span>
+            <div className="flex items-center gap-3">
+              <CardTitle>{m.basics_volume()}</CardTitle>
+              <CalibrateDialog disabled={!connected} />
             </div>
-            <SliderRow
-              id="headphone"
-              label={m.basics_headphone_volume()}
-              value={live?.headphone ?? 0}
-              max={100}
-              disabled={!connected}
-              onSend={(v) => apply.mutate({ kind: "headphone", value: v })}
-            />
+            <div className="flex flex-col gap-1.5">
+              <SliderRow
+                id="gain"
+                label={m.basics_gain()}
+                hint={m.basics_gain_hint()}
+                value={gain}
+                max={100}
+                disabled={!connected}
+                onSend={(v) => apply.mutate({ kind: "gain", value: v })}
+              />
+              <div className="grid grid-cols-3 text-center text-[11px] text-muted-foreground">
+                <span>0–10 cm</span>
+                <span>11–30 cm</span>
+                <span>31–50 cm</span>
+              </div>
+              {connected && gain >= 100 && (
+                <p className="flex items-center gap-1.5 text-xs text-warning">
+                  <CircleAlert className="size-3.5" aria-hidden />
+                  {m.basics_gain_max()}
+                </p>
+              )}
+            </div>
+            <BoostControl boostDb={data?.boostDb ?? null} remembered={num(data?.settings.boostDb, 10)} />
           </Card>
 
-          <Card>
-            <CardTitle>{m.basics_noise()}</CardTitle>
-            <div className="flex items-center gap-2.5">
-              <Switch
-                id="nc"
-                checked={!!live?.noiseCancellation}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardTitle>{m.basics_headphones()}</CardTitle>
+              <div className="flex items-center gap-2.5">
+                <Switch
+                  id="monitor"
+                  checked={!!live?.monitor}
+                  disabled={!connected}
+                  onCheckedChange={(on) => apply.mutate({ kind: "monitor", value: on })}
+                />
+                <label htmlFor="monitor" className="font-medium">
+                  {m.basics_monitor()}
+                </label>
+                <span className="text-xs text-muted-foreground">{m.basics_monitor_hint()}</span>
+              </div>
+              <SliderRow
+                id="headphone"
+                label={m.basics_headphone_volume()}
+                value={live?.headphone ?? 0}
+                max={100}
                 disabled={!connected}
-                onCheckedChange={(on) => apply.mutate({ kind: "noiseCancellation", value: on })}
+                onSend={(v) => apply.mutate({ kind: "headphone", value: v })}
               />
-              <label htmlFor="nc" className="font-medium">
-                {m.basics_nc()}
-              </label>
-            </div>
-            <SliderRow
-              id="nc-strength"
-              label={m.basics_nc_strength()}
-              value={live?.ncStrength ?? 0}
-              max={40}
-              suffix=" / 40"
-              disabled={!connected || !live?.noiseCancellation}
-              onSend={(v) => apply.mutate({ kind: "ncStrength", value: v })}
-            />
-          </Card>
-        </div>
+            </Card>
 
-        <RecordingCard connected={connected} />
-      </main>
+            <Card>
+              <CardTitle>{m.basics_noise()}</CardTitle>
+              <div className="flex items-center gap-2.5">
+                <Switch
+                  id="nc"
+                  checked={!!live?.noiseCancellation}
+                  disabled={!connected}
+                  onCheckedChange={(on) => apply.mutate({ kind: "noiseCancellation", value: on })}
+                />
+                <label htmlFor="nc" className="font-medium">
+                  {m.basics_nc()}
+                </label>
+              </div>
+              <SliderRow
+                id="nc-strength"
+                label={m.basics_nc_strength()}
+                value={live?.ncStrength ?? 0}
+                max={40}
+                suffix=" / 40"
+                disabled={!connected || !live?.noiseCancellation}
+                onSend={(v) => apply.mutate({ kind: "ncStrength", value: v })}
+              />
+            </Card>
+          </div>
+
+          <RecordingCard connected={connected} />
+        </main>
+      </div>
     </div>
   );
 }
