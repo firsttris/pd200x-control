@@ -181,7 +181,15 @@ pub fn run(cmd: Cmd) -> Result<()> {
             let device = open_device();
             let live = device.as_ref().ok().map(|d| d.read_live()).transpose()?;
             let boost = pipewire::get_boost(&SystemRunner).ok();
-            let settings = store::load(&config_dir()?)?;
+            let mut settings = store::load(&config_dir()?)?;
+            // Show what the microphone has, not only what was saved.
+            if let Ok(d) = &device {
+                let mut tone = d.read_tone()?;
+                tone.source = presets::detect(&tone.eq, &settings);
+                let linkage = settings.lighting.is_some_and(|l| l.linkage);
+                settings.lighting = Some(d.read_lighting(linkage)?);
+                settings.tone = Some(tone);
+            }
             if json {
                 let v = serde_json::json!({ "live": live, "boostDb": boost, "settings": settings });
                 println!("{}", serde_json::to_string_pretty(&v)?);

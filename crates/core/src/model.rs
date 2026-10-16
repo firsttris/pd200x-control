@@ -25,6 +25,16 @@ impl FilterType {
             FilterType::HighShelf => 4,
         }
     }
+
+    pub fn from_code(code: u16) -> FilterType {
+        match code {
+            1 => FilterType::LowPass,
+            2 => FilterType::HighPass,
+            3 => FilterType::LowShelf,
+            4 => FilterType::HighShelf,
+            _ => FilterType::Peaking,
+        }
+    }
 }
 
 /// One of the seven EQ bands: five parametric ones, then the high-pass and
@@ -110,6 +120,10 @@ impl RgbColor {
     pub fn code(self) -> u16 {
         RgbColor::ALL.iter().position(|&c| c == self).unwrap_or(0) as u16
     }
+
+    pub fn from_code(code: u16) -> RgbColor {
+        RgbColor::ALL.get(usize::from(code)).copied().unwrap_or(RgbColor::White)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -148,8 +162,7 @@ pub struct LiveState {
     pub nc_strength: u8,
 }
 
-/// EQ, compressor and limiter: the device accepts them but cannot be asked
-/// for them, so the app remembers them.
+/// EQ, compressor and limiter, as read from the device or remembered.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -193,7 +206,8 @@ pub struct Settings {
     pub tone: Option<Tone>,
     pub lighting: Option<Lighting>,
     pub profiles: Vec<Profile>,
-    /// Send `tone` and `lighting` to the microphone when it is plugged in.
+    /// Send `tone` and `lighting` to the microphone when it is plugged in. Off
+    /// by default: the microphone keeps its settings and the app reads them.
     pub restore_on_connect: bool,
     /// The software boost to go back to when it is switched on again.
     pub boost_db: f32,
@@ -201,7 +215,7 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { tone: None, lighting: None, profiles: Vec::new(), restore_on_connect: true, boost_db: 10.0 }
+        Settings { tone: None, lighting: None, profiles: Vec::new(), restore_on_connect: false, boost_db: 10.0 }
     }
 }
 
@@ -235,13 +249,28 @@ mod tests {
         assert_eq!(RgbColor::White.code(), 0);
         assert_eq!(RgbColor::Cyan.code(), 5);
         assert_eq!(RgbColor::Rainbow.code(), 8);
+        assert_eq!(RgbColor::from_code(5), RgbColor::Cyan);
+        assert_eq!(RgbColor::from_code(99), RgbColor::White);
+    }
+
+    #[test]
+    fn filter_codes_round_trip() {
+        for f in [
+            FilterType::Peaking,
+            FilterType::LowPass,
+            FilterType::HighPass,
+            FilterType::LowShelf,
+            FilterType::HighShelf,
+        ] {
+            assert_eq!(FilterType::from_code(f.code()), f);
+        }
     }
 
     #[test]
     fn settings_read_with_missing_fields() {
         let s: Settings = serde_json::from_str(r#"{"boostDb": 14.6}"#).unwrap();
         assert_eq!(s.boost_db, 14.6);
-        assert!(s.restore_on_connect);
+        assert!(!s.restore_on_connect);
         assert_eq!(s.tone, None);
     }
 }

@@ -25,7 +25,9 @@ fn status_shows_the_simulated_microphone() {
         .success()
         .stdout(contains("PD200X  connected"))
         .stdout(contains("Gain          70 / 100"))
-        .stdout(contains("Boost         unavailable"));
+        .stdout(contains("Boost         unavailable"))
+        .stdout(contains("Tone          flat, compressor off, limiter off"))
+        .stdout(contains("Light         off"));
 }
 
 #[test]
@@ -62,7 +64,6 @@ fn light_settings_are_saved() {
     assert_eq!(s["lighting"]["color"], "cyan");
     assert_eq!(s["lighting"]["brightness"], 80);
     assert_eq!(s["lighting"]["linkage"], true);
-    pd200x(tmp.path()).arg("status").assert().stdout(contains("Light         cyan, 80 %, off while muted"));
 }
 
 #[test]
@@ -80,7 +81,7 @@ fn bad_input_is_explained() {
     pd200x(tmp.path()).args(["eq", "loud"]).assert().failure().stderr(contains("pd200x eq list"));
     pd200x(tmp.path()).args(["light", "pink"]).assert().failure().stderr(contains("colours"));
     pd200x(tmp.path()).args(["compressor", "-60"]).assert().failure().stderr(contains("between -40 and 0"));
-    pd200x(tmp.path()).arg("boost").assert().failure().stderr(contains("pw-dump is not installed"));
+    pd200x(tmp.path()).arg("boost").assert().failure().stderr(contains("wpctl is not installed"));
 }
 
 #[test]

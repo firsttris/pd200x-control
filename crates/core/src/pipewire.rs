@@ -62,6 +62,21 @@ pub fn find_source(pw_dump: &str) -> Option<u32> {
     })
 }
 
+/// The id from `wpctl status -n`, for systems without `pw-dump`:
+/// ` │  *  105. alsa_input.usb-352f_PD200X_…mono-fallback [vol: 1.75]`.
+pub fn find_source_in_status(status: &str) -> Option<u32> {
+    status.lines().find_map(|line| {
+        let lower = line.to_ascii_lowercase();
+        let name_at = lower.find("alsa_input.")?;
+        if !(lower[name_at..].contains("352f") && lower[name_at..].contains("pd200x")) {
+            return None;
+        }
+        let before = line[..name_at].trim_end().strip_suffix('.')?;
+        let digits: String = before.chars().rev().take_while(char::is_ascii_digit).collect();
+        digits.chars().rev().collect::<String>().parse().ok()
+    })
+}
+
 /// `Volume: 1.75` or `Volume: 1.75 [MUTED]`.
 pub fn parse_volume(wpctl: &str) -> Option<f32> {
     wpctl.split_whitespace().skip_while(|w| *w != "Volume:").nth(1)?.parse().ok()
@@ -76,8 +91,15 @@ fn run(runner: &dyn Runner, program: &str, args: &[&str]) -> Result<String> {
     }
 }
 
+/// From `pw-dump`, or from `wpctl status -n` where `pw-dump` is not installed.
 pub fn source_id(runner: &dyn Runner) -> Result<u32> {
-    find_source(&run(runner, "pw-dump", &[])?).ok_or(Error::NoAudioSource)
+    match run(runner, "pw-dump", &[]) {
+        Ok(dump) => find_source(&dump).ok_or(Error::NoAudioSource),
+        Err(Error::ToolMissing(_)) => {
+            find_source_in_status(&run(runner, "wpctl", &["status", "-n"])?).ok_or(Error::NoAudioSource)
+        }
+        Err(e) => Err(e),
+    }
 }
 
 /// The current boost in dB (0 when the volume is at or below 100 %).
@@ -148,6 +170,15 @@ mod tests {
     }
 
     #[test]
+    fn finds_the_source_in_wpctl_status() {
+        let status = " │     100. alsa_card.usb-352f_PD200X_Podcast_Microphone_214b206000000178-00 [alsa]\n \
+                      │  *  105. alsa_input.usb-352f_PD200X_Podcast_Microphone_214b206000000178-00.mono-fallback [vol: 1.75]\n \
+                      │     106. alsa_input.usb-046d_Logitech_StreamCam [vol: 1.00]\n";
+        assert_eq!(find_source_in_status(status), Some(105));
+        assert_eq!(find_source_in_status("nothing"), None);
+    }
+
+    #[test]
     fn parses_wpctl_volume() {
         assert_eq!(parse_volume("Volume: 1.75\n"), Some(1.75));
         assert_eq!(parse_volume("Volume: 0.40 [MUTED]"), Some(0.40));
@@ -176,6 +207,6 @@ mod tests {
                 Err(io::ErrorKind::NotFound.into())
             }
         }
-        assert!(matches!(get_boost(&Missing), Err(Error::ToolMissing(t)) if t == "pw-dump"));
+        assert!(matches!(get_boost(&Missing), Err(Error::ToolMissing(t)) if t == "wpctl"));
     }
 }

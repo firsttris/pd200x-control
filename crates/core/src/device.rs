@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 
 use crate::changes::{self, Change, Step};
 use crate::level::{Level, LevelMeter};
-use crate::model::LiveState;
+use crate::model::{Dynamics, EqBand, FilterType, Lighting, LiveState, RgbColor, Tone, EQ_BANDS};
 use crate::protocol::{self, reg};
 use crate::transport::Transport;
 use crate::{Error, Result};
@@ -123,6 +123,47 @@ impl Device {
         })
     }
 
+    /// EQ, compressor and limiter as the device has them. Which preset they
+    /// came from is not stored on the device (`source` stays `None`).
+    pub fn read_tone(&self) -> Result<Tone> {
+        let eq = (0..EQ_BANDS)
+            .map(|i| {
+                let base = reg::EQ_BASE + (i as u16) * 5;
+                Ok(EqBand {
+                    enabled: self.query(base)? != 0,
+                    filter: FilterType::from_code(self.query(base + 1)?),
+                    frequency: self.query(base + 2)?,
+                    gain_db: protocol::decode_db(self.query(base + 3)?),
+                    q: f32::from(self.query(base + 4)?) / 100.0,
+                })
+            })
+            .collect::<Result<Vec<_>>>()?;
+        let dynamics = |enable: u16, threshold: u16| -> Result<Dynamics> {
+            Ok(Dynamics {
+                enabled: self.query(enable)? != 0,
+                threshold_db: protocol::decode_db(self.query(threshold)?),
+            })
+        };
+        Ok(Tone {
+            source: None,
+            eq,
+            compressor: dynamics(reg::COMPRESSOR_ENABLE, reg::COMPRESSOR_THRESHOLD)?,
+            limiter: dynamics(reg::LIMITER_ENABLE, reg::LIMITER_THRESHOLD)?,
+        })
+    }
+
+    /// The ring light as the device has it. The linkage register answers
+    /// with values that do not match what was written (16 after writing 0),
+    /// so `linkage` is passed in from the settings.
+    pub fn read_lighting(&self, linkage: bool) -> Result<Lighting> {
+        Ok(Lighting {
+            enabled: self.query(reg::RGB_ENABLE)? != 0,
+            brightness: self.query(reg::RGB_BRIGHTNESS)?.min(100) as u8,
+            color: RgbColor::from_code(self.query(reg::RGB_COLOR)?),
+            linkage,
+        })
+    }
+
     pub fn level(&self) -> Level {
         if !self.is_alive() {
             return Level::SILENT;
@@ -191,6 +232,21 @@ mod tests {
         sim.set(reg::NC_STRENGTH, 1410);
         let s = dev.read_live().unwrap();
         assert_eq!((s.gain, s.monitor, s.nc_strength, s.mute), (100, true, 21, false));
+    }
+
+    #[test]
+    fn reads_tone_and_lighting_back() {
+        let (dev, _sim) = open();
+        let natural = crate::Change::EqBand { index: 2, band: crate::presets::NATURAL[2] };
+        dev.apply(&natural).unwrap();
+        dev.apply(&Change::Compressor(Dynamics { enabled: true, threshold_db: -9.0 })).unwrap();
+        dev.apply(&Change::RgbColor(RgbColor::Cyan)).unwrap();
+        dev.apply(&Change::RgbBrightness(70)).unwrap();
+        let tone = dev.read_tone().unwrap();
+        assert_eq!(tone.eq[2], crate::presets::NATURAL[2]);
+        assert_eq!(tone.compressor, Dynamics { enabled: true, threshold_db: -9.0 });
+        let light = dev.read_lighting(true).unwrap();
+        assert_eq!((light.color, light.brightness, light.linkage), (RgbColor::Cyan, 70, true));
     }
 
     #[test]

@@ -1,0 +1,84 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+/* Colours follow the system (prefers-color-scheme); dark is the design's home. */
+:root {
+  --background: #f6f7f9;
+  --foreground: #111318;
+  --card: #ffffff;
+  --card-inset: #f1f3f6;
+  --muted: #eceef2;
+  --muted-foreground: #5d636e;
+  --border: #dde0e6;
+  --input: #cfd3da;
+  --ring: #3b6fd8;
+  --accent: #2f6fe0;
+  --accent-soft: #e3ecfd;
+  --accent-foreground: #ffffff;
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #dc2626;
+  --meter-off: #dfe2e8;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0e0f11;
+    --foreground: #e8eaed;
+    --card: #16181c;
+    --card-inset: #0b0c0e;
+    --muted: #1f2227;
+    --muted-foreground: #8f949c;
+    --border: #262930;
+    --input: #33363d;
+    --ring: #6ea8ff;
+    --accent: #6ea8ff;
+    --accent-soft: #1c2a44;
+    --accent-foreground: #0b1730;
+    --success: #4ade80;
+    --warning: #f5b14c;
+    --danger: #f87171;
+    --meter-off: #1d2025;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-inset: var(--card-inset);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-meter-off: var(--meter-off);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html,
+  body,
+  #root {
+    @apply h-full;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased text-sm;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+}

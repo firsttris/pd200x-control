@@ -1,0 +1,41 @@
+import { defineConfig, devices } from "@playwright/test";
+
+// E2E tests run the real frontend in Chromium against the in-memory mock
+// backend (`--mode mock`), which implements every Tauri command. Tauri shows
+// the app in WebKitGTK on Linux, so CI runs every flow in WebKit too; locally
+// only with PW_WEBKIT=1 (needs Playwright's WebKit).
+const executablePath = process.env.PW_CHROMIUM_PATH || undefined;
+const webkit = !!process.env.CI || !!process.env.PW_WEBKIT;
+
+export default defineConfig({
+  testDir: "./e2e",
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
+  use: {
+    baseURL: "http://localhost:1420",
+    // The flows read the German texts; e2e/i18n.spec.ts runs in English.
+    locale: "de-DE",
+    trace: "retain-on-failure",
+    launchOptions: { executablePath },
+  },
+  projects: [
+    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1180, height: 800 } } },
+    { name: "narrow", use: { ...devices["Desktop Chrome"], viewport: { width: 420, height: 860 } } },
+    ...(webkit
+      ? [
+          {
+            name: "webkit",
+            use: { ...devices["Desktop Safari"], viewport: { width: 1180, height: 800 }, launchOptions: {} },
+          },
+        ]
+      : []),
+  ],
+  webServer: {
+    command: "pnpm dev:mock",
+    url: "http://localhost:1420",
+    reuseExistingServer: !process.env.CI,
+    timeout: 60_000,
+  },
+});

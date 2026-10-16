@@ -1,7 +1,7 @@
 //! The eight EQ presets of the MAONO Link app, from USB captures by pd200x
 //! (advnpzn, `src/presets.rs`, MIT). Bands 1–5, then HPF and LPF.
 
-use crate::model::{EqBand, FilterType, EQ_BANDS};
+use crate::model::{EqBand, FilterType, Settings, EQ_BANDS};
 
 const fn band(enabled: bool, filter: FilterType, frequency: u16, gain_db: f32, q: f32) -> EqBand {
     EqBand { enabled, filter, frequency, gain_db, q }
@@ -107,6 +107,30 @@ pub fn find(id: &str) -> Option<&'static PresetEq> {
     ALL.iter().find(|(i, _)| *i == id).map(|(_, eq)| *eq)
 }
 
+/// Two EQs sound the same: disabled bands do not count, values match within rounding.
+pub fn same_eq(a: &[EqBand], b: &[EqBand]) -> bool {
+    a.len() == b.len()
+        && a.iter().zip(b).all(|(x, y)| {
+            x.enabled == y.enabled
+                && (!x.enabled
+                    || (x.filter == y.filter
+                        && x.frequency == y.frequency
+                        && (x.gain_db - y.gain_db).abs() < 0.05
+                        && (x.q - y.q).abs() < 0.011))
+        })
+}
+
+/// Which preset or own profile an EQ read from the device is, if any. When
+/// two sound the same, the one chosen last (`settings.tone.source`) wins.
+pub fn detect(eq: &[EqBand], settings: &Settings) -> Option<String> {
+    let saved = settings.tone.as_ref().and_then(|t| t.source.clone());
+    let own = settings.profiles.iter().map(|p| (p.id.clone(), p.eq.clone()));
+    let builtin = ALL.iter().map(|(id, eq)| ((*id).to_string(), eq.to_vec()));
+    let mut candidates: Vec<(String, Vec<EqBand>)> = own.chain(builtin).collect();
+    candidates.sort_by_key(|(id, _)| Some(id) != saved.as_ref());
+    candidates.into_iter().find(|(_, c)| same_eq(eq, c)).map(|(id, _)| id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -118,6 +142,25 @@ mod tests {
             assert_eq!(eq[HPF_INDEX].filter, FilterType::HighPass, "{id}");
             assert_eq!(eq[LPF_INDEX].filter, FilterType::LowPass, "{id}");
         }
+    }
+
+    #[test]
+    fn detects_presets_and_profiles() {
+        use crate::model::Profile;
+        let s = Settings::default();
+        assert_eq!(detect(&NATURAL, &s).as_deref(), Some("natural"));
+        // Factory state: every band off at other frequencies – sounds like "flat"
+        let mut factory = FLAT.to_vec();
+        factory[0].frequency = 63;
+        assert_eq!(detect(&factory, &s).as_deref(), Some("flat"));
+        let mut custom = NATURAL.to_vec();
+        custom[2].gain_db = 5.0;
+        assert_eq!(detect(&custom, &s), None);
+        let own = Settings {
+            profiles: vec![Profile { id: "talk".into(), name: "Talk".into(), eq: custom.clone() }],
+            ..Settings::default()
+        };
+        assert_eq!(detect(&custom, &own).as_deref(), Some("talk"));
     }
 
     #[test]
