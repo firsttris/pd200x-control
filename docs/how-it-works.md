@@ -68,7 +68,9 @@ desktops show as 175 %. WirePlumber keeps it across restarts.
 WebRTC clients (Teams, Slack, browsers) change the source volume through the PulseAudio interface
 of PipeWire. The switch writes a `pipewire-pulse` drop-in that gives every PulseAudio client the
 `block-source-volume` quirk and restarts `pipewire-pulse`; drop-ins append to `pulse.rules`. `wpctl`
-talks to PipeWire directly and is not affected, so the app can still change the volume.
+talks to PipeWire directly and is not affected, so the app can still change the volume. The Flatpak
+writes the same file to the host's config folder but cannot restart `pipewire-pulse`; it shows the
+command instead (see [Installation](installation.md#flatpak)).
 
 ## The level finder
 
@@ -91,5 +93,5 @@ the default output.
 | The microphone | everything it can be set to; it keeps it without power |
 | WirePlumber | the system microphone volume |
 | `~/.config/pipewire/pipewire-pulse.conf.d/` | "Protect from apps", when it is on |
-| `~/.config/pd200x-control/settings.json` | own EQ profiles, the last EQ, dynamics and light the app set, "light off while muted", the options |
+| `~/.config/pd200x-control/settings.json` | own EQ profiles, the last EQ, dynamics and light the app set, "light off while muted", the options (the Flatpak: below `~/.var/app/io.github.firsttris.pd200x-control/config/`) |
 | The temporary folder | the test recording, until the app quits |

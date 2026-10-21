@@ -10,3 +10,8 @@ node_modules/
 test-results/
 /.venv-docs/
 /site/
+
+# Flatpak builds (flatpak/io.github.firsttris.pd200x-control.yml)
+/.flatpak-builder/
+/flatpak/build-dir/
+/flatpak/repo/

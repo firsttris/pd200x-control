@@ -11,7 +11,7 @@ Also as a website with search: **https://firsttris.github.io/pd200x-control/**
 
 | | |
 |---|---|
-| [Installation](installation.md) | AppImage, .deb, .rpm, the CLI, the udev rule, building from source |
+| [Installation](installation.md) | AppImage, .deb, .rpm, Flatpak, the CLI, the udev rule, building from source |
 | [The app](app.md) | every page: basics, sound, light, the menu and the tray |
 | [A quiet microphone](quiet-microphone.md) | why the PD200X is quiet on Linux and how to get a good level |
 | [Command line](command-line.md) | every `pd200x` command |
