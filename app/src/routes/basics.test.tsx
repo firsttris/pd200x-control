@@ -84,4 +84,14 @@ describe("protection from apps", () => {
     await waitFor(() => expect(backend.state.snapshot.protected).toBe(true));
     expect(backend.state.calls.some((c) => c.cmd === "set_protected" && c.args.on === true)).toBe(true);
   });
+
+  it("names the restart command in the Flatpak", async () => {
+    const { user } = await renderApp("/", (b) => {
+      b.state.snapshot.sandboxed = true;
+    });
+    await user.click(await screen.findByRole("switch", { name: "Vor Apps schützen" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("systemctl --user restart pipewire-pulse")).toBeInTheDocument();
+    expect(within(dialog).queryByText(/Beim Umschalten setzt der Ton kurz aus/)).not.toBeInTheDocument();
+  });
 });

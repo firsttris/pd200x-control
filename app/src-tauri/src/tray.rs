@@ -7,6 +7,8 @@ use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Manager, Runtime};
 
+use pd200x_core::flatpak;
+
 use crate::hub::Hub;
 
 struct Labels {
@@ -89,6 +91,11 @@ pub fn create<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<bool> {
         });
     if let Some(icon) = app.default_window_icon() {
         tray = tray.icon(icon.clone());
+    }
+    // The tray host on the desktop reads the icon from a file by path; from the
+    // Flatpak only this folder has the same path on the host.
+    if let Some(dir) = flatpak::shared_runtime_dir_from(|k| std::env::var(k).ok()) {
+        tray = tray.temp_dir_path(dir.join("tray-icon"));
     }
     tray.build(app)?;
     Ok(true)

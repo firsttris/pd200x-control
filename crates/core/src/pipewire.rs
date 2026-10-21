@@ -148,9 +148,14 @@ pub fn is_protected(config_home: &Path) -> bool {
     config_home.join(PROTECT_FILE).exists()
 }
 
+/// What the user runs when the app cannot restart pipewire-pulse itself.
+pub const RESTART_COMMAND: &str = "systemctl --user restart pipewire-pulse";
+
 /// Writes or removes the drop-in, then restarts pipewire-pulse so it applies
-/// (sound from PulseAudio apps stops for a moment).
-pub fn set_protected(runner: &dyn Runner, config_home: &Path, on: bool) -> Result<()> {
+/// (sound from PulseAudio apps stops for a moment). Without `restart` (the
+/// Flatpak, which has no `systemctl` and may not reach the host's systemd)
+/// it applies once the user runs [`RESTART_COMMAND`] or logs in again.
+pub fn set_protected(runner: &dyn Runner, config_home: &Path, on: bool, restart: bool) -> Result<()> {
     let path = config_home.join(PROTECT_FILE);
     if on {
         std::fs::create_dir_all(path.parent().expect("PROTECT_FILE has a folder"))?;
@@ -158,15 +163,16 @@ pub fn set_protected(runner: &dyn Runner, config_home: &Path, on: bool) -> Resul
     } else if path.exists() {
         std::fs::remove_file(&path)?;
     }
+    if !restart {
+        return Ok(());
+    }
     run(runner, "systemctl", &["--user", "restart", "pipewire-pulse.service"]).map(|_| ())
 }
 
-/// `$XDG_CONFIG_HOME`, else `~/.config`.
+/// The host's config folder (`$XDG_CONFIG_HOME`, else `~/.config`; the
+/// host's in a Flatpak, see [`crate::flatpak::host_config_home_from`]).
 pub fn system_config_home() -> Option<std::path::PathBuf> {
-    match std::env::var("XDG_CONFIG_HOME").ok().filter(|x| !x.is_empty()) {
-        Some(x) => Some(x.into()),
-        None => std::env::var("HOME").ok().map(|h| Path::new(&h).join(".config")),
-    }
+    crate::flatpak::host_config_home_from(|k| std::env::var(k).ok())
 }
 
 #[cfg(test)]
@@ -247,16 +253,28 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let f = fake("Volume: 1.75");
         assert!(!is_protected(tmp.path()));
-        set_protected(&f, tmp.path(), true).unwrap();
+        set_protected(&f, tmp.path(), true, true).unwrap();
         assert!(is_protected(tmp.path()));
         let conf = std::fs::read_to_string(tmp.path().join(PROTECT_FILE)).unwrap();
         assert!(conf.contains("quirks = [ block-source-volume ]"));
         assert!(conf.contains("application.name = \"~.*\""));
         assert_eq!(f.calls.lock().unwrap().last().unwrap(), "systemctl --user restart pipewire-pulse.service");
-        set_protected(&f, tmp.path(), false).unwrap();
+        set_protected(&f, tmp.path(), false, true).unwrap();
         assert!(!is_protected(tmp.path()));
         // Switching off twice is fine
-        set_protected(&f, tmp.path(), false).unwrap();
+        set_protected(&f, tmp.path(), false, true).unwrap();
+    }
+
+    #[test]
+    fn protection_without_restart_only_writes_the_drop_in() {
+        // The Flatpak: no systemctl in the sandbox, the user restarts pipewire-pulse.
+        let tmp = tempfile::tempdir().unwrap();
+        let f = fake("Volume: 1.75");
+        set_protected(&f, tmp.path(), true, false).unwrap();
+        assert!(is_protected(tmp.path()));
+        set_protected(&f, tmp.path(), false, false).unwrap();
+        assert!(!is_protected(tmp.path()));
+        assert!(f.calls.lock().unwrap().is_empty());
     }
 
     #[test]

@@ -100,3 +100,18 @@ fn protect_shows_and_writes_the_drop_in() {
     assert!(tmp.path().join("pipewire/pipewire-pulse.conf.d/90-pd200x-control.conf").exists());
     pd200x(tmp.path()).arg("protect").assert().success().stdout(contains("Protected from apps: on"));
 }
+
+#[test]
+fn protect_in_the_flatpak_writes_the_hosts_drop_in_and_names_the_restart() {
+    let sandbox = tempfile::tempdir().unwrap();
+    let host = tempfile::tempdir().unwrap();
+    pd200x(sandbox.path())
+        .env("FLATPAK_ID", "io.github.firsttris.pd200x-control")
+        .env("HOST_XDG_CONFIG_HOME", host.path())
+        .args(["protect", "on"])
+        .assert()
+        .success()
+        .stdout(contains("systemctl --user restart pipewire-pulse"));
+    assert!(host.path().join("pipewire/pipewire-pulse.conf.d/90-pd200x-control.conf").exists());
+    assert!(!sandbox.path().join("pipewire").exists());
+}

@@ -9,7 +9,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use pd200x_core::changes::{lighting_changes, tone_changes};
 use pd200x_core::model::{Dynamics, Lighting, RgbColor, Settings, Tone, COMPRESSOR_MIN_DB, LIMITER_MIN_DB};
 use pd200x_core::pipewire::{self, SystemRunner};
-use pd200x_core::{calibrate, presets, sim, store, Change, Device};
+use pd200x_core::{calibrate, flatpak, presets, sim, store, Change, Device};
 
 use crate::{ui, Cmd, Toggle};
 
@@ -203,7 +203,13 @@ pub fn run(cmd: Cmd) -> Result<()> {
             let home = pipewire::system_config_home().context("neither XDG_CONFIG_HOME nor HOME is set")?;
             match state {
                 None => println!("Protected from apps: {}", if pipewire::is_protected(&home) { "on" } else { "off" }),
-                Some(s) => pipewire::set_protected(&SystemRunner, &home, s.is_on())?,
+                Some(s) => {
+                    let sandboxed = flatpak::is_sandboxed();
+                    pipewire::set_protected(&SystemRunner, &home, s.is_on(), !sandboxed)?;
+                    if sandboxed {
+                        println!("Applies after `{}` on the host, or the next login.", pipewire::RESTART_COMMAND);
+                    }
+                }
             }
             Ok(())
         }

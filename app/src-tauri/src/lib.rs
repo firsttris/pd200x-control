@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use pd200x_core::pipewire::SystemRunner;
 use pd200x_core::recording::SystemSpawner;
-use pd200x_core::{sim, store, Device};
+use pd200x_core::{flatpak, sim, store, Device};
 use tauri::Manager;
 
 /// All commands, for a given runtime. Expects `commands::*` in scope; used
@@ -96,12 +96,33 @@ fn watch(hub: Arc<hub::Hub>) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let config_dir = store::system_config_dir().expect("HOME must be set");
-    let hub = Arc::new(hub::Hub::new(config_dir, Box::new(SystemRunner), Box::new(SystemSpawner), opener()));
+    let hub = Arc::new(hub::Hub::new(
+        config_dir,
+        hub::Host::system(),
+        Box::new(SystemRunner),
+        Box::new(SystemSpawner),
+        opener(),
+    ));
     let exit_hub = hub.clone();
     let builder = specta_builder();
 
+    let flatpak_id = flatpak::id();
+    // GTK names the window after the program (Wayland app_id, X11 WM_CLASS); in
+    // the Flatpak that has to be the app ID, or the desktop does not match the
+    // window to the Flatpak's desktop file. Prefixr does the same (src-tauri/src/lib.rs).
+    if let Some(id) = &flatpak_id {
+        glib::set_prgname(Some(id.as_str()));
+    }
+    // A Flatpak may only own D-Bus names below its app ID, and the default (the
+    // Tauri identifier) is none, so a second start would open a second window.
+    let single_instance = tauri_plugin_single_instance::Builder::new().callback(|app, _, _| tray::show_window(app));
+    let single_instance = match flatpak_id {
+        Some(id) => single_instance.dbus_id(id),
+        None => single_instance,
+    };
+
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, _, _| tray::show_window(app)))
+        .plugin(single_instance.build())
         // Opens the window again at the size and place it was left at.
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .manage(hub.clone())

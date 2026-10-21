@@ -7,6 +7,7 @@ pub mod calibrate;
 pub mod changes;
 pub mod device;
 mod error;
+pub mod flatpak;
 pub mod level;
 pub mod model;
 pub mod pipewire;

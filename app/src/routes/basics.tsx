@@ -68,18 +68,23 @@ function LevelPanel({ muted, connected, onMute }: { muted: boolean; connected: b
 
 const MAX_PERCENT = dbToPercent(MAX_BOOST_DB);
 
+/** The Flatpak cannot restart pipewire-pulse itself (`pipewire::RESTART_COMMAND`). */
+const RESTART_PULSE = "systemctl --user restart pipewire-pulse";
+
 function BoostControl({
   boostDb,
   remembered,
   protectedFromApps,
+  sandboxed,
 }: {
   boostDb: number | null;
   remembered: number;
   protectedFromApps: boolean;
+  sandboxed: boolean;
 }) {
   const setBoost = useSetBoost();
   const setProtected = useSetProtected();
-  // Switching restarts pipewire-pulse: ask first (null = no question open).
+  // Switching restarts pipewire-pulse (the user does that in the Flatpak): ask first (null = no question open).
   const [confirm, setConfirm] = useState<boolean | null>(null);
   const available = boostDb !== null;
   const db = num(boostDb);
@@ -138,7 +143,14 @@ function BoostControl({
         <DialogContent>
           <DialogTitle>{m.basics_protect()}</DialogTitle>
           {confirm && <DialogDescription>{m.protect_confirm_on()}</DialogDescription>}
-          <p className="leading-relaxed text-muted-foreground">{m.protect_confirm_restart()}</p>
+          {sandboxed ? (
+            <>
+              <p className="leading-relaxed text-muted-foreground">{m.protect_confirm_restart_flatpak()}</p>
+              <pre className="overflow-x-auto rounded-lg bg-card-inset p-3 font-mono text-xs">{RESTART_PULSE}</pre>
+            </>
+          ) : (
+            <p className="leading-relaxed text-muted-foreground">{m.protect_confirm_restart()}</p>
+          )}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setConfirm(null)}>
               {m.common_cancel()}
@@ -252,6 +264,7 @@ export function BasicsPage() {
               boostDb={data?.boostDb ?? null}
               remembered={num(data?.settings.boostDb, 10)}
               protectedFromApps={!!data?.protected}
+              sandboxed={!!data?.sandboxed}
             />
           </Card>
 
