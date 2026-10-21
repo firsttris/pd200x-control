@@ -17,7 +17,7 @@
   "banner_notFound_title": "No PD200X found",
   "banner_notFound_text": "Plug the microphone in over USB. The app connects by itself.",
   "banner_permission_title": "No permission for the microphone",
-  "banner_permission_text": "Linux does not let your user control the microphone yet. Install the udev rule from the packaging folder (or the .deb/.rpm package, which brings it) and plug the microphone in again:",
+  "banner_permission_text": "Linux does not let your user control the microphone yet. The .deb and .rpm packages bring the udev rule; for the AppImage and the Flatpak, install it once like this and plug the microphone in again:",
   "basics_level": "Live level",
   "basics_target": "Target",
   "basics_peak": "Peak",
@@ -138,6 +138,7 @@
   "basics_protect_short": "Teams, Slack and browsers no longer turn it down",
   "protect_confirm_on": "Teams, Slack and browsers can then no longer turn the microphone volume down. The control in the system settings cannot change it either, only this app.",
   "protect_confirm_restart": "Sound stops for a moment when switching. Restart running browsers and call apps (Teams, Slack, Discord …) once afterwards, or they will not find the microphone.",
+  "protect_confirm_restart_flatpak": "The Flatpak cannot restart pipewire-pulse itself. Run this command in a terminal afterwards (or log in again); sound stops for a moment. Then restart running browsers and call apps (Teams, Slack, Discord …) once, or they will not find the microphone.",
   "protect_switch_on": "Switch on",
   "protect_switch_off": "Switch off"
 }

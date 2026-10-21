@@ -2636,6 +2636,7 @@ dependencies = [
 name = "pd200x-control"
 version = "0.1.1"
 dependencies = [
+ "glib",
  "libc",
  "pd200x-core",
  "serde",

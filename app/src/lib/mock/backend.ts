@@ -103,6 +103,7 @@ export function initialState(): MockState {
       problem: null,
       boostDb: 0,
       protected: false,
+      sandboxed: false,
       // As a microphone reports it: flat EQ, cyan ring
       tone: { ...(structuredClone(DEFAULT_TONE) as unknown as Tone), source: "flat" },
       lighting: { enabled: true, brightness: 70, color: "cyan", linkage: false },

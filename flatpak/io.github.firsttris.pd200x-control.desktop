@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=pd200x-control
+GenericName=Microphone settings
+GenericName[de]=Mikrofon-Einstellungen
+Comment=Control the Maono PD200X/PD200XS microphone
+Comment[de]=Das Mikrofon Maono PD200X/PD200XS steuern
+Exec=pd200x-control
+Icon=io.github.firsttris.pd200x-control
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=maono;pd200x;pd200xs;microphone;mic;gain;eq;rgb;
+StartupWMClass=io.github.firsttris.pd200x-control

@@ -1,7 +1,8 @@
 import { PlugZap, ShieldAlert } from "lucide-react";
 import { m } from "@/paraglide/messages";
 
-const UDEV = `sudo cp 99-pd200x.rules /etc/udev/rules.d/
+const UDEV = `curl -LO https://raw.githubusercontent.com/firsttris/pd200x-control/main/packaging/99-pd200x.rules
+sudo cp 99-pd200x.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger`;
 
 /** Why the controls are off: no microphone, or no permission to open it. */

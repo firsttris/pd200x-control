@@ -1,7 +1,8 @@
 name: Release
 
 # A tag vX.Y.Z (from the "Bump version" button or pushed from a checkout) runs the checks, builds the
-# CLI, the AppImage, the .deb and the .rpm, and creates the GitHub release with these files.
+# CLI, the AppImage, the .deb, the .rpm and the Flatpak bundle (flatpak.yml), and creates the GitHub
+# release with these files.
 # The checks are skipped when main's CI already passed for the code (a release commit from "Bump
 # version" changes only versions), so the build starts right away.
 # Run by hand on a branch it only checks and builds (no release), e.g. to try the packaging.
@@ -29,11 +30,21 @@ jobs:
     if: needs.tested.outputs.tested != 'true'
     uses: ./.github/workflows/ci.yml
 
+  flatpak:
+    needs: [tested, checks]
+    if: ${{ !cancelled() && needs.tested.result == 'success' && needs.checks.result != 'failure' }}
+    uses: ./.github/workflows/flatpak.yml
+    with:
+      artifact-name: release-flatpak
+      check-sources: false
+    permissions:
+      contents: read
+
   build:
     name: Build · CLI, AppImage, .deb, .rpm
-    needs: [tested, checks]
+    needs: [tested, checks, flatpak]
     # The checks either passed or were not needed
-    if: ${{ !cancelled() && needs.tested.result == 'success' && needs.checks.result != 'failure' }}
+    if: ${{ !cancelled() && needs.tested.result == 'success' && needs.checks.result != 'failure' && needs.flatpak.result == 'success' }}
     # Older glibc than the test runners, so the binaries also run on older distributions
     runs-on: ubuntu-22.04
     timeout-minutes: 45
@@ -62,6 +73,11 @@ jobs:
         working-directory: app
         env:
           NO_STRIP: "1"
+      # Into dist/ before the checksums are taken.
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-flatpak
+          path: dist
       - name: Collect release files
         run: |
           set -euo pipefail

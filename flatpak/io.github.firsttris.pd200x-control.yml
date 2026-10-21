@@ -1,0 +1,122 @@
+# pd200x-control as a Flatpak, built from source without network access (docs/development.md#flatpak).
+#
+#   flatpak-builder --user --install --force-clean flatpak/build-dir \
+#     flatpak/io.github.firsttris.pd200x-control.yml
+#
+# cargo-sources.json and node-sources.json come from Cargo.lock and app/pnpm-lock.yaml; regenerate
+# them with flatpak/update-sources.sh whenever either lock file changes.
+id: io.github.firsttris.pd200x-control
+runtime: org.gnome.Platform
+runtime-version: "51"
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node24
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: pd200x-control
+
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  # The microphone is a hidraw node; Flatpak has no narrower device permission for it (--device=usb
+  # is libusb only). Opening it still needs the udev rule on the host.
+  - --device=all
+  # pw-dump, wpctl, pw-record and pw-play talk to PipeWire directly (as pwvucontrol on Flathub).
+  # WirePlumber 0.5 lets a Flatpak client set a source's volume this way (measured with 0.5.18;
+  # with 0.4.17 the volume stayed unchanged, docs/installation.md#flatpak).
+  - --socket=pulseaudio
+  - --filesystem=xdg-run/pipewire-0
+  # "Protect from apps" writes its drop-in where pipewire-pulse reads it.
+  - --filesystem=xdg-config/pipewire/pipewire-pulse.conf.d:create
+  # The tray icon.
+  - --talk-name=org.kde.StatusNotifierWatcher
+
+modules:
+  # Tray icon (tauri's tray-icon loads it at runtime).
+  - shared-modules/libayatana-appindicator/libayatana-appindicator-gtk3.json
+
+  # wpctl for the software boost: the runtime has PipeWire's tools but not WirePlumber's.
+  # pwvucontrol on Flathub builds it the same way (flathub/com.saivert.pwvucontrol).
+  - shared-modules/lua5.4/lua-5.4.json
+  - name: wireplumber
+    buildsystem: meson
+    config-opts:
+      - -Dsystem-lua=true
+      - -Dsystem-lua-version=5.4
+      - -Ddaemon=false
+      - -Dtests=false
+      - -Ddbus-tests=false
+      - -Ddoc=disabled
+      - -Dintrospection=disabled
+      - -Dsystemd=disabled
+      - -Delogind=disabled
+    cleanup:
+      - /bin/wpexec
+      - /include
+      - /lib/pkgconfig
+      - /share/bash-completion
+      - /share/zsh
+    sources:
+      - type: git
+        url: https://github.com/PipeWire/wireplumber.git
+        tag: 0.5.18
+        commit: 81606cbb32d29df20147d1b68b662c1082654d81
+
+  - name: pd200x-control
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/node24/bin:/usr/lib/sdk/rust-stable/bin
+      # The pnpm below, ahead of any other.
+      prepend-path: /run/build/pd200x-control/bin
+      env:
+        CARGO_HOME: /run/build/pd200x-control/cargo
+        CARGO_NET_OFFLINE: "true"
+        XDG_CACHE_HOME: /run/build/pd200x-control/flatpak-node/cache
+        npm_config_offline: "true"
+    sources:
+      # The checkout this manifest is in. Flathub would use a git source with the release tag.
+      - type: dir
+        path: ..
+        skip:
+          - .flatpak-builder
+          - flatpak/build-dir
+          - flatpak/repo
+          - app/node_modules
+          - app/dist
+          - app/src/paraglide
+          - target
+      # pnpm itself (app/package.json's packageManager), run by Node from the SDK extension.
+      - type: archive
+        url: https://registry.npmjs.org/pnpm/-/pnpm-10.28.0.tgz
+        sha256: 9b0b04e6e79945566917f8411bb6f65fd2f3e1590426904e8500e1acc4b33561
+        dest: pnpm
+      - type: script
+        dest: bin
+        dest-filename: pnpm
+        commands:
+          - exec node /run/build/pd200x-control/pnpm/bin/pnpm.cjs "$@"
+      - node-sources.json
+      - cargo-sources.json
+    build-commands:
+      - cd app && pnpm install --offline --frozen-lockfile --store-dir=/run/build/pd200x-control/flatpak-node/pnpm-store
+      - cargo --offline fetch --locked
+      # tauri.conf.json's beforeBuildCommand builds the frontend (pnpm build) first.
+      - cd app && pnpm tauri build --no-bundle
+      - cargo build --release --offline --locked -p pd200x-cli
+      - install -Dm755 target/release/pd200x-control /app/bin/pd200x-control
+      - install -Dm755 target/release/pd200x /app/bin/pd200x
+      - install -Dm644 app/src-tauri/icons/32x32.png /app/share/icons/hicolor/32x32/apps/io.github.firsttris.pd200x-control.png
+      - install -Dm644 app/src-tauri/icons/64x64.png /app/share/icons/hicolor/64x64/apps/io.github.firsttris.pd200x-control.png
+      - install -Dm644 app/src-tauri/icons/128x128.png /app/share/icons/hicolor/128x128/apps/io.github.firsttris.pd200x-control.png
+      - install -Dm644 app/src-tauri/icons/128x128@2x.png /app/share/icons/hicolor/256x256/apps/io.github.firsttris.pd200x-control.png
+      - install -Dm644 app/src-tauri/icons/icon.png /app/share/icons/hicolor/512x512/apps/io.github.firsttris.pd200x-control.png
+      - install -Dm644 flatpak/io.github.firsttris.pd200x-control.desktop -t /app/share/applications
+      # The release entry follows Cargo.toml's version, which "Bump version" raises (the metainfo is
+      # not among the files it rewrites); Flatpak shows the app's version from this entry.
+      - >-
+        version=$(grep -m1 -E '^version *= *"' Cargo.toml | cut -d'"' -f2) &&
+        date=$(date -u -d "@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%F) &&
+        sed -E "s|<release version=\"[^\"]*\" date=\"[^\"]*\"/>|<release version=\"$version\" date=\"$date\"/>|"
+        flatpak/io.github.firsttris.pd200x-control.metainfo.xml > metainfo.xml &&
+        grep -q "<release version=\"$version\"" metainfo.xml &&
+        install -Dm644 metainfo.xml /app/share/metainfo/io.github.firsttris.pd200x-control.metainfo.xml

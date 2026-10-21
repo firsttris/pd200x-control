@@ -61,11 +61,10 @@ sudo apt install ./pd200x-control_*_amd64.deb
 # Fedora, openSUSE (installs the udev rule)
 sudo dnf install ./pd200x-control-*.x86_64.rpm
 
-# Any distribution: the AppImage, plus the udev rule once
-chmod +x pd200x-control_*_amd64.AppImage
+# Any distribution: the Flatpak or the AppImage, plus the udev rule once
 curl -LO https://raw.githubusercontent.com/firsttris/pd200x-control/main/packaging/99-pd200x.rules
 sudo cp 99-pd200x.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules && sudo udevadm trigger
-./pd200x-control_*_amd64.AppImage
+flatpak install --user ./pd200x-control_*_x86_64.flatpak   # or: chmod +x and run the .AppImage
 ```
 
 Plug the microphone in (again) and the app finds it. The command line tool `pd200x` is in the
@@ -142,7 +141,7 @@ The full documentation, with search, is at **[firsttris.github.io/pd200x-control
 
 | | |
 |---|---|
-| [Installation](https://firsttris.github.io/pd200x-control/installation.html) | AppImage, .deb, .rpm, the CLI, the udev rule, building from source |
+| [Installation](https://firsttris.github.io/pd200x-control/installation.html) | AppImage, .deb, .rpm, Flatpak, the CLI, the udev rule, building from source |
 | [The app](https://firsttris.github.io/pd200x-control/app.html) | every page and control |
 | [A quiet microphone](https://firsttris.github.io/pd200x-control/quiet-microphone.html) | why it is quiet and how to get a good level |
 | [Command line](https://firsttris.github.io/pd200x-control/command-line.html) | every `pd200x` command |

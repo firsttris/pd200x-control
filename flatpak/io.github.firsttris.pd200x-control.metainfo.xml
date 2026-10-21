@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.firsttris.pd200x-control</id>
+  <name>pd200x-control</name>
+  <summary>Control the Maono PD200X and PD200XS microphone</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-only</project_license>
+  <developer id="io.github.firsttris">
+    <name>Tristan Teufel</name>
+  </developer>
+  <description>
+    <p>
+      pd200x-control sets everything MAONO Link sets on the Maono PD200X and PD200XS USB
+      microphones, on Linux: gain, mute, headphone monitoring, noise cancellation, the EQ profiles,
+      a 7-band parametric EQ, compressor, limiter and the RGB ring light.
+    </p>
+    <ul>
+      <li>A live level meter that shows where your voice peaks</li>
+      <li>The system microphone volume up to 200 % for quiet dynamic microphones</li>
+      <li>Find my level: gain and volume from five seconds of speech</li>
+      <li>A test recording through PipeWire, to hear yourself as others hear you</li>
+    </ul>
+    <p>
+      The microphone needs a udev rule on the host once, so your user may open it; the app shows
+      the commands.
+    </p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Live level, gain, system microphone volume and monitoring</caption>
+      <image>https://raw.githubusercontent.com/firsttris/pd200x-control/main/docs/screenshot-basics.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>EQ profiles and the 7-band parametric EQ</caption>
+      <image>https://raw.githubusercontent.com/firsttris/pd200x-control/main/docs/screenshot-sound.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>The RGB ring light</caption>
+      <image>https://raw.githubusercontent.com/firsttris/pd200x-control/main/docs/screenshot-light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Find my level</caption>
+      <image>https://raw.githubusercontent.com/firsttris/pd200x-control/main/docs/screenshot-calibrate.png</image>
+    </screenshot>
+  </screenshots>
+  <launchable type="desktop-id">io.github.firsttris.pd200x-control.desktop</launchable>
+  <url type="homepage">https://github.com/firsttris/pd200x-control</url>
+  <url type="bugtracker">https://github.com/firsttris/pd200x-control/issues</url>
+  <url type="vcs-browser">https://github.com/firsttris/pd200x-control</url>
+  <url type="help">https://firsttris.github.io/pd200x-control/</url>
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+  </categories>
+  <provides>
+    <modalias>usb:v352Fp0104d*</modalias>
+    <binary>pd200x</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.1" date="2026-10-16"/>
+  </releases>
+</component>

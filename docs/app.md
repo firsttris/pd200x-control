@@ -31,7 +31,8 @@ microphone volume down during a call and leave it there, so after a call you are
 everywhere else. With this switch on they cannot change it any more; they adjust your level inside
 the call as before. The control in the system's sound settings cannot change it then either, only
 this app. It writes `~/.config/pipewire/pipewire-pulse.conf.d/90-pd200x-control.conf` and restarts
-`pipewire-pulse`, so sound stops for a moment when switching; the app asks first. Restart running
+`pipewire-pulse`, so sound stops for a moment when switching; the app asks first. The Flatpak cannot
+restart it and names the command in that question instead. Restart running
 browsers and call apps (Teams, Slack, Discord) once afterwards, or they will not find the microphone.
 
 **Find my level**: speak for five seconds the way you usually do. The app measures your peaks and

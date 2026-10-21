@@ -17,7 +17,7 @@
   "banner_notFound_title": "Kein PD200X gefunden",
   "banner_notFound_text": "Steck das Mikrofon per USB an. Die App verbindet sich von selbst.",
   "banner_permission_title": "Keine Berechtigung für das Mikrofon",
-  "banner_permission_text": "Linux erlaubt deinem Benutzer noch nicht, das Mikrofon zu steuern. Installiere die udev-Regel aus dem Ordner packaging (oder das .deb/.rpm-Paket, das sie mitbringt) und steck das Mikrofon neu an:",
+  "banner_permission_text": "Linux erlaubt deinem Benutzer noch nicht, das Mikrofon zu steuern. Die .deb- und .rpm-Pakete bringen die udev-Regel mit; für das AppImage und das Flatpak installierst du sie einmal so und steckst das Mikrofon neu an:",
   "basics_level": "Live-Pegel",
   "basics_target": "Zielbereich",
   "basics_peak": "Spitze",
@@ -138,6 +138,7 @@
   "basics_protect_short": "Teams, Slack und Browser regeln sie nicht mehr herunter",
   "protect_confirm_on": "Teams, Slack und Browser können die Mikrofon-Lautstärke dann nicht mehr herunterregeln. Auch der Regler in den Systemeinstellungen kann sie nicht mehr ändern, nur diese App.",
   "protect_confirm_restart": "Beim Umschalten setzt der Ton kurz aus. Starte danach laufende Browser und Call-Apps (Teams, Slack, Discord …) einmal neu, sonst finden sie das Mikrofon nicht.",
+  "protect_confirm_restart_flatpak": "Die Flatpak-App kann pipewire-pulse nicht selbst neu starten. Führe danach diesen Befehl in einem Terminal aus (oder melde dich neu an); dabei setzt der Ton kurz aus. Starte dann laufende Browser und Call-Apps (Teams, Slack, Discord …) einmal neu, sonst finden sie das Mikrofon nicht.",
   "protect_switch_on": "Einschalten",
   "protect_switch_off": "Ausschalten"
 }

@@ -27,6 +27,30 @@ sudo dnf install ./pd200x-control-*.x86_64.rpm
 
 The `.deb` and `.rpm` packages install the udev rule for you; plug the microphone in again afterwards.
 
+## Flatpak
+
+```sh
+flatpak install --user ./pd200x-control_*_x86_64.flatpak
+flatpak run io.github.firsttris.pd200x-control
+```
+
+It needs the GNOME runtime from Flathub (`flatpak remote-add --if-not-exists --user flathub
+https://dl.flathub.org/repo/flathub.flatpakrepo` once) and, like the AppImage, the udev rule below:
+a Flatpak cannot install it. The command line tool is inside:
+`flatpak run --command=pd200x io.github.firsttris.pd200x-control status`.
+
+What is different in the sandbox:
+
+- **Settings** live in `~/.var/app/io.github.firsttris.pd200x-control/config/pd200x-control/`. The
+  settings of a native installation (`~/.config/pd200x-control/`) are not taken over; the
+  microphone keeps its own settings anyway.
+- **Protect from apps** writes its file to the host's `~/.config/pipewire/pipewire-pulse.conf.d/`
+  as the native app does, but cannot restart `pipewire-pulse` from the sandbox. The app shows the
+  command, `systemctl --user restart pipewire-pulse`; logging in again does the same.
+- **The system microphone volume** needs WirePlumber 0.5 or newer on the host (Fedora 40, Ubuntu
+  24.10, Debian 13, Arch, Bazzite and later). With WirePlumber 0.4 (Ubuntu 24.04, Debian 12) the
+  volume stays where it is when set from the Flatpak; use the `.deb` there.
+
 ## The udev rule
 
 The app talks to the microphone through its `/dev/hidraw*` device. Many systems only let root open
@@ -43,7 +67,7 @@ Then unplug the microphone and plug it in again. Without the rule the app shows
 
 ??? note "On immutable systems (Bazzite, Silverblue, Kinoite)"
     `/etc/udev/rules.d/` is writable on these systems too; the commands above work as they are.
-    Use the AppImage, or build in a toolbox (see [Development](development.md)).
+    Use the Flatpak or the AppImage, or build in a toolbox (see [Development](development.md)).
 
 ## The command line tool
 
@@ -61,7 +85,7 @@ See [Command line](command-line.md).
 
 - **PipeWire tools** for the system microphone volume and the test recording: `wpctl`, `pw-record`,
   `pw-play` (and `pw-dump`, which is optional). They come with PipeWire and WirePlumber on every
-  distribution that uses PipeWire.
+  distribution that uses PipeWire; the Flatpak brings its own.
 - **A tray** is optional. On desktops with a StatusNotifier tray (KDE, GNOME with the AppIndicator
   extension) the app adds an icon with mute, open and quit; it needs `libayatana-appindicator3`,
   which the AppImage brings along. Without it, closing the window quits the app.
@@ -73,6 +97,7 @@ and the CLI into `~/.local/bin` with a desktop entry.
 
 ## Uninstalling
 
-Delete the AppImage (or `sudo apt remove pd200x-control` / `sudo dnf remove pd200x-control`), the
-settings in `~/.config/pd200x-control/` and, if you installed it by hand,
+Delete the AppImage (or `sudo apt remove pd200x-control` / `sudo dnf remove pd200x-control` /
+`flatpak uninstall --delete-data io.github.firsttris.pd200x-control`), the settings in
+`~/.config/pd200x-control/` and, if you installed it by hand,
 `/etc/udev/rules.d/99-pd200x.rules`. The microphone keeps its settings.

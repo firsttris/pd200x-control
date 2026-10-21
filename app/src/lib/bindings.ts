@@ -178,6 +178,11 @@ export type Snapshot = {
 	boostDb: number | null,
 	/**  Apps (Teams, Slack, browsers) may not change the microphone volume. */
 	protected: boolean,
+	/**
+	 *  The app runs in the Flatpak sandbox: the user restarts pipewire-pulse
+	 *  after switching `protected`.
+	 */
+	sandboxed: boolean,
 	/**  EQ and dynamics as the microphone has them (read when it connects). */
 	tone: Tone | null,
 	/**  The ring light as the microphone has it. */

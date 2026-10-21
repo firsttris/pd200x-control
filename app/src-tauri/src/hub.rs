@@ -15,7 +15,7 @@ use pd200x_core::level::Level;
 use pd200x_core::model::{Lighting, LiveState, Profile, Settings, Tone, EQ_BANDS};
 use pd200x_core::pipewire::{self, Runner};
 use pd200x_core::recording::{self, Process, RecordingInfo, Spawner};
-use pd200x_core::{presets, store, Change, Device, Error};
+use pd200x_core::{flatpak, presets, store, Change, Device, Error};
 
 /// Error as the frontend sees it: a stable kind it translates, plus the
 /// English text for details.
@@ -51,6 +51,9 @@ pub struct Snapshot {
     pub boost_db: Option<f32>,
     /// Apps (Teams, Slack, browsers) may not change the microphone volume.
     pub protected: bool,
+    /// The app runs in the Flatpak sandbox: the user restarts pipewire-pulse
+    /// after switching `protected`.
+    pub sandboxed: bool,
     /// EQ and dynamics as the microphone has them (read when it connects).
     pub tone: Option<Tone>,
     /// The ring light as the microphone has it.
@@ -98,6 +101,21 @@ enum Rec {
 
 pub type Opener = Box<dyn Fn() -> pd200x_core::Result<Device> + Send + Sync>;
 
+/// The system around the app: where PipeWire reads its drop-ins and whether
+/// the app runs in the Flatpak sandbox.
+#[derive(Debug, Clone)]
+pub struct Host {
+    /// The host's `~/.config`.
+    pub config_home: Option<PathBuf>,
+    pub sandboxed: bool,
+}
+
+impl Host {
+    pub fn system() -> Host {
+        Host { config_home: pipewire::system_config_home(), sandboxed: flatpak::is_sandboxed() }
+    }
+}
+
 pub struct Hub {
     device: Mutex<Option<Arc<Device>>>,
     problem: Mutex<Option<String>>,
@@ -106,6 +124,7 @@ pub struct Hub {
     /// Tone and lighting on the device: read on connect, kept up to date by `apply`.
     onboard: Mutex<Option<(Tone, Lighting)>>,
     config_dir: PathBuf,
+    host: Host,
     runner: Box<dyn Runner>,
     spawner: Box<dyn Spawner>,
     rec: Mutex<Rec>,
@@ -114,7 +133,13 @@ pub struct Hub {
 }
 
 impl Hub {
-    pub fn new(config_dir: PathBuf, runner: Box<dyn Runner>, spawner: Box<dyn Spawner>, open: Opener) -> Hub {
+    pub fn new(
+        config_dir: PathBuf,
+        host: Host,
+        runner: Box<dyn Runner>,
+        spawner: Box<dyn Spawner>,
+        open: Opener,
+    ) -> Hub {
         let settings = store::load(&config_dir).unwrap_or_default();
         Hub {
             device: Mutex::new(None),
@@ -123,6 +148,7 @@ impl Hub {
             boost: Mutex::new(None),
             onboard: Mutex::new(None),
             config_dir,
+            host,
             runner,
             spawner,
             rec: Mutex::new(Rec::Idle),
@@ -200,7 +226,8 @@ impl Hub {
             live,
             problem: self.problem.lock().unwrap().clone(),
             boost_db: *self.boost.lock().unwrap(),
-            protected: self.config_home().is_some_and(|h| pipewire::is_protected(&h)),
+            protected: self.host.config_home.as_deref().is_some_and(pipewire::is_protected),
+            sandboxed: self.host.sandboxed,
             tone: onboard.as_ref().map(|(t, _)| t.clone()),
             lighting: onboard.map(|(_, l)| l),
             settings: self.settings(),
@@ -327,15 +354,12 @@ impl Hub {
         Ok(calibrate::propose(&values, gain, boost)?)
     }
 
-    /// `~/.config`, the parent of the app's own config folder.
-    fn config_home(&self) -> Option<PathBuf> {
-        self.config_dir.parent().map(PathBuf::from)
-    }
-
-    /// Keeps apps (their automatic gain control) from changing the microphone volume.
+    /// Keeps apps (their automatic gain control) from changing the microphone
+    /// volume. The drop-in goes to the host's config folder, also from the
+    /// Flatpak, whose own `~/.config` is not the one PipeWire reads.
     pub fn set_protected(&self, on: bool) -> CmdResult<()> {
-        let home = self.config_home().ok_or_else(|| CmdError::other("no config folder"))?;
-        pipewire::set_protected(self.runner.as_ref(), &home, on)?;
+        let home = self.host.config_home.as_deref().ok_or_else(|| CmdError::other("no config folder"))?;
+        pipewire::set_protected(self.runner.as_ref(), home, on, !self.host.sandboxed)?;
         Ok(())
     }
 
@@ -580,11 +604,60 @@ mod tests {
         }
     }
 
+    fn native() -> Host {
+        Host { config_home: None, sandboxed: false }
+    }
+
+    /// Every program fails, so a test notices when one is run.
+    struct NoPrograms;
+
+    impl Runner for NoPrograms {
+        fn run(&self, program: &str, _: &[&str]) -> std::io::Result<pipewire::Output> {
+            Err(std::io::Error::other(format!("{program} must not run")))
+        }
+    }
+
+    #[test]
+    fn protection_in_the_flatpak_writes_to_the_host_config_without_restarting() {
+        let app_config = tempfile::tempdir().unwrap();
+        let host_config = tempfile::tempdir().unwrap();
+        let host = Host { config_home: Some(host_config.path().to_path_buf()), sandboxed: true };
+        let hub = Hub::new(
+            app_config.path().join("pd200x-control"),
+            host,
+            Box::new(NoPrograms),
+            Box::new(recording::SystemSpawner),
+            Box::new(|| Err(pd200x_core::Error::NotFound)),
+        );
+        hub.set_protected(true).unwrap();
+        assert!(host_config.path().join(pipewire::PROTECT_FILE).exists());
+        assert!(!app_config.path().join(pipewire::PROTECT_FILE).exists());
+        let snap = hub.snapshot();
+        assert!(snap.protected && snap.sandboxed);
+    }
+
+    #[test]
+    fn protection_natively_restarts_pipewire_pulse() {
+        let host_config = tempfile::tempdir().unwrap();
+        let host = Host { config_home: Some(host_config.path().to_path_buf()), sandboxed: false };
+        let hub = Hub::new(
+            host_config.path().join("pd200x-control"),
+            host,
+            Box::new(NoPrograms),
+            Box::new(recording::SystemSpawner),
+            Box::new(|| Err(pd200x_core::Error::NotFound)),
+        );
+        // The file is written, then the restart is tried (and fails here).
+        assert_eq!(hub.set_protected(true).unwrap_err().kind, "io");
+        assert!(host_config.path().join(pipewire::PROTECT_FILE).exists());
+    }
+
     #[test]
     fn records_analyses_and_plays_back() {
         let tmp = tempfile::tempdir().unwrap();
         let hub = Hub::new(
             tmp.path().to_path_buf(),
+            native(),
             Box::new(FakePipeWire),
             Box::new(FakeSpawner),
             Box::new(|| Ok(Device::new(Box::new(Simulator::new())))),
@@ -612,6 +685,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let hub = Hub::new(
             tmp.path().to_path_buf(),
+            native(),
             Box::new(FakePipeWire),
             Box::new(FakeSpawner),
             Box::new(|| Ok(Device::new(Box::new(Simulator::new())))),
@@ -628,6 +702,7 @@ mod tests {
         let s2 = sim.clone();
         let hub = Hub::new(
             tmp.path().to_path_buf(),
+            native(),
             Box::new(pipewire::SystemRunner),
             Box::new(recording::SystemSpawner),
             Box::new(move || Ok(Device::new(Box::new(s2.clone())))),
@@ -653,6 +728,7 @@ mod tests {
         let s2 = sim.clone();
         let hub = Hub::new(
             tmp.path().to_path_buf(),
+            native(),
             Box::new(pipewire::SystemRunner),
             Box::new(recording::SystemSpawner),
             Box::new(move || Ok(Device::new(Box::new(s2.clone())))),
