@@ -96,6 +96,8 @@ The manifest builds from the checkout without network access, as Flathub require
   in `FBT`) and commit the results; the **Flatpak** workflow checks that they match and builds the
   bundle on pull requests that touch the Flatpak or a lock file.
 - pnpm itself comes from the npm registry as a source; Node and Rust are the SDK extensions.
+- The `<release>` entry of the metainfo, which Flatpak shows as the app's version, is set from
+  `Cargo.toml` when the bundle is built, since **Bump version** does not rewrite the metainfo.
 - The runtime has PipeWire's tools (`pw-dump`, `pw-record`, `pw-play`) but not WirePlumber's, so
   the manifest builds WirePlumber for `wpctl`, as pwvucontrol on Flathub does.
 

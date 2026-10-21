@@ -111,4 +111,12 @@ modules:
       - install -Dm644 app/src-tauri/icons/128x128@2x.png /app/share/icons/hicolor/256x256/apps/io.github.firsttris.pd200x-control.png
       - install -Dm644 app/src-tauri/icons/icon.png /app/share/icons/hicolor/512x512/apps/io.github.firsttris.pd200x-control.png
       - install -Dm644 flatpak/io.github.firsttris.pd200x-control.desktop -t /app/share/applications
-      - install -Dm644 flatpak/io.github.firsttris.pd200x-control.metainfo.xml -t /app/share/metainfo
+      # The release entry follows Cargo.toml's version, which "Bump version" raises (the metainfo is
+      # not among the files it rewrites); Flatpak shows the app's version from this entry.
+      - >-
+        version=$(grep -m1 -E '^version *= *"' Cargo.toml | cut -d'"' -f2) &&
+        date=$(date -u -d "@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%F) &&
+        sed -E "s|<release version=\"[^\"]*\" date=\"[^\"]*\"/>|<release version=\"$version\" date=\"$date\"/>|"
+        flatpak/io.github.firsttris.pd200x-control.metainfo.xml > metainfo.xml &&
+        grep -q "<release version=\"$version\"" metainfo.xml &&
+        install -Dm644 metainfo.xml /app/share/metainfo/io.github.firsttris.pd200x-control.metainfo.xml
