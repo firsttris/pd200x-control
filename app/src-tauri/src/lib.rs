@@ -95,6 +95,14 @@ fn watch(hub: Arc<hub::Hub>) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let hidden = std::env::args().any(|arg| arg == "--hidden");
+    let mut context = tauri::generate_context!();
+    // Decide visibility after the tray exists, before the first window is mapped.
+    for window in &mut context.config_mut().app.windows {
+        if window.label == "main" {
+            window.visible = false;
+        }
+    }
     let config_dir = store::system_config_dir().expect("HOME must be set");
     let hub = Arc::new(hub::Hub::new(
         config_dir,
@@ -115,7 +123,11 @@ pub fn run() {
     }
     // A Flatpak may only own D-Bus names below its app ID, and the default (the
     // Tauri identifier) is none, so a second start would open a second window.
-    let single_instance = tauri_plugin_single_instance::Builder::new().callback(|app, _, _| tray::show_window(app));
+    let single_instance = tauri_plugin_single_instance::Builder::new().callback(|app, args, _| {
+        if !args.iter().any(|arg| arg == "--hidden") {
+            tray::show_window(app);
+        }
+    });
     let single_instance = match flatpak_id {
         Some(id) => single_instance.dbus_id(id),
         None => single_instance,
@@ -124,14 +136,21 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(single_instance.build())
         // Opens the window again at the size and place it was left at.
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_state_flags(
+                    tauri_plugin_window_state::StateFlags::all() & !tauri_plugin_window_state::StateFlags::VISIBLE,
+                )
+                .build(),
+        )
         .manage(hub.clone())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             builder.mount_events(app);
             watch(hub);
             // Without a tray (no StatusNotifier host) closing the window quits as usual.
-            if matches!(tray::create(app.handle()), Ok(true)) {
+            let has_tray = matches!(tray::create(app.handle()), Ok(true));
+            if has_tray {
                 if let Some(window) = app.get_webview_window("main") {
                     let w = window.clone();
                     window.on_window_event(move |event| {
@@ -142,9 +161,12 @@ pub fn run() {
                     });
                 }
             }
+            if !hidden || !has_tray {
+                tray::show_window(app.handle());
+            }
             Ok(())
         })
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while building pd200x-control")
         .run(move |_, event| {
             if let tauri::RunEvent::Exit = event {

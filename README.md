@@ -47,6 +47,9 @@ it is quiet, and its settings are out of reach.
   recognises the active EQ profile. The microphone keeps everything itself; close the app when you
   are done.
 
+Start the desktop app with `--hidden` to keep it in the tray at login. Open its window later
+from the tray or the normal application launcher; a second `--hidden` launch stays in the background.
+
 Runs on any Linux with PipeWire – Fedora, Ubuntu, Debian, Arch, openSUSE, Bazzite – under KDE, GNOME
 or any other desktop.
 

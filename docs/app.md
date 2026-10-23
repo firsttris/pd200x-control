@@ -103,3 +103,14 @@ can hear you.
 
 Where the desktop has a tray, the app adds an icon with **Toggle mute**, **Open window** and
 **Quit**. Closing the window then keeps the app in the tray; quit it from there.
+
+### Start in the tray
+
+Use `pd200x-control --hidden` with a native package, `pd200x-control.AppImage --hidden` after
+`just install`, or `flatpak run io.github.firsttris.pd200x-control --hidden`. Add that command to
+your desktop's startup applications to launch at login without opening a window.
+
+The initial window stays invisible while the tray is created. Saved window visibility does not
+reopen it. **Open window** in the tray or a normal application launch shows the existing instance;
+a second launch with `--hidden` leaves it as it is. If the tray library is unavailable or tray
+creation fails, the app shows its window so it remains accessible.

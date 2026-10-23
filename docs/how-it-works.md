@@ -26,6 +26,13 @@ flowchart LR
   shadcn/ui style, texts in German and English through Paraglide JS. Outside Tauri it runs against an
   in-memory mock backend.
 
+## Startup visibility
+
+The desktop app creates its main window invisible and decides whether to show it after tray
+setup. `--hidden` keeps it in the tray; without a tray, it opens the window. Window-state restoration
+keeps size and position but excludes visibility. The single-instance callback shows the existing
+window for normal launches and leaves it unchanged for `--hidden` launches.
+
 ## The USB protocol
 
 The microphone is a USB audio device plus a HID interface for its settings (`352f:0104`). The app
