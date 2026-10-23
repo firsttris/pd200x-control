@@ -29,9 +29,9 @@ tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
 tauri-plugin-single-instance = "2"
 tauri-plugin-window-state = "2"
 libc = "0.2"
+tempfile = "3"
 # Already in the tree through Tauri's GTK; sets the program name to the app ID in the Flatpak.
 glib = "0.18"
 
 [dev-dependencies]
-tempfile = "3"
 tauri = { version = "2", features = ["test", "tray-icon", "image-png"] }

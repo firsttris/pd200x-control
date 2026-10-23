@@ -2,6 +2,7 @@
 //! settings and PipeWire. The Tauri commands and the tray are thin wrappers,
 //! so this is testable with the simulator and a fake PipeWire.
 
+use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -129,6 +130,7 @@ pub struct Hub {
     spawner: Box<dyn Spawner>,
     rec: Mutex<Rec>,
     rec_path: PathBuf,
+    recording_dir: tempfile::TempDir,
     open: Opener,
 }
 
@@ -141,6 +143,11 @@ impl Hub {
         open: Opener,
     ) -> Hub {
         let settings = store::load(&config_dir).unwrap_or_default();
+        let recording_dir = tempfile::Builder::new()
+            .prefix("pd200x-control-")
+            .permissions(std::fs::Permissions::from_mode(0o700))
+            .tempdir()
+            .expect("private recording directory");
         Hub {
             device: Mutex::new(None),
             problem: Mutex::new(None),
@@ -152,7 +159,8 @@ impl Hub {
             runner,
             spawner,
             rec: Mutex::new(Rec::Idle),
-            rec_path: std::env::temp_dir().join(format!("pd200x-control-{}.wav", std::process::id())),
+            rec_path: recording_dir.path().join("recording.wav"),
+            recording_dir,
             open,
         }
     }
@@ -444,6 +452,7 @@ impl Hub {
         let mut rec = self.rec.lock().unwrap();
         finish(&mut rec);
         let _ = std::fs::remove_file(&self.rec_path);
+        let _ = std::fs::remove_dir(self.recording_dir.path());
     }
 }
 
@@ -608,6 +617,46 @@ mod tests {
         Host { config_home: None, sandboxed: false }
     }
 
+    #[test]
+    fn recording_directories_are_private_and_unique() {
+        let config = tempfile::tempdir().unwrap();
+        let make = || {
+            Hub::new(
+                config.path().to_path_buf(),
+                native(),
+                Box::new(NoPrograms),
+                Box::new(FakeSpawner),
+                Box::new(|| Err(Error::NotFound)),
+            )
+        };
+        let first = make();
+        let second = make();
+        assert_ne!(first.rec_path.parent(), second.rec_path.parent());
+        let mode = std::fs::metadata(first.rec_path.parent().unwrap()).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o700);
+    }
+
+    #[test]
+    fn cleanup_removes_the_recording_directory_while_hub_is_shared() {
+        let config = tempfile::tempdir().unwrap();
+        let hub = Arc::new(Hub::new(
+            config.path().to_path_buf(),
+            native(),
+            Box::new(FakePipeWire),
+            Box::new(FakeSpawner),
+            Box::new(|| Err(Error::NotFound)),
+        ));
+        let watcher = hub.clone();
+        hub.start_recording().unwrap();
+        let path = hub.rec_path.clone();
+        let directory = path.parent().unwrap().to_path_buf();
+        assert!(path.exists());
+        hub.cleanup();
+        assert_eq!(watcher.recording_status().unwrap().state, RecordingState::Idle);
+        assert!(!path.exists());
+        assert!(!directory.exists());
+    }
+
     /// Every program fails, so a test notices when one is run.
     struct NoPrograms;
 
@@ -675,9 +724,11 @@ mod tests {
         // The fake playback has ended by now; the status notices.
         assert_eq!(hub.recording_status().unwrap().state, RecordingState::Ready);
         let path = hub.rec_path.clone();
+        let directory = path.parent().unwrap().to_path_buf();
         assert!(path.exists());
         drop(hub);
         assert!(!path.exists());
+        assert!(!directory.exists());
     }
 
     #[test]
