@@ -81,10 +81,10 @@ loud, the system volume comes down first.
 
 ## The test recording
 
-`pw-record --target <PD200X source> --format s16 --rate 48000 --channels 1` writes a WAV file to the
-temporary folder, stopped after 30 seconds at the latest with SIGINT, so the WAV header is complete.
-The core reads it back for the peak, the RMS average and a 120-point waveform. `pw-play` plays it on
-the default output.
+`pw-record --target <PD200X source> --format s16 --rate 48000 --channels 1` writes a WAV file to a
+private directory (mode 0700, made on the first recording) in the temporary folder, stopped after 30
+seconds at the latest with SIGINT, so the WAV header is complete. The core reads it back for the
+peak, the RMS average and a 120-point waveform. `pw-play` plays it on the default output.
 
 ## What is stored where
 

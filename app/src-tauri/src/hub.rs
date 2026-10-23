@@ -129,8 +129,9 @@ pub struct Hub {
     runner: Box<dyn Runner>,
     spawner: Box<dyn Spawner>,
     rec: Mutex<Rec>,
-    rec_path: PathBuf,
-    recording_dir: tempfile::TempDir,
+    /// Where the private recording directory goes; the system's temporary folder.
+    temp_dir: PathBuf,
+    rec_dir: Mutex<Option<tempfile::TempDir>>,
     open: Opener,
 }
 
@@ -143,11 +144,6 @@ impl Hub {
         open: Opener,
     ) -> Hub {
         let settings = store::load(&config_dir).unwrap_or_default();
-        let recording_dir = tempfile::Builder::new()
-            .prefix("pd200x-control-")
-            .permissions(std::fs::Permissions::from_mode(0o700))
-            .tempdir()
-            .expect("private recording directory");
         Hub {
             device: Mutex::new(None),
             problem: Mutex::new(None),
@@ -159,8 +155,8 @@ impl Hub {
             runner,
             spawner,
             rec: Mutex::new(Rec::Idle),
-            rec_path: recording_dir.path().join("recording.wav"),
-            recording_dir,
+            temp_dir: std::env::temp_dir(),
+            rec_dir: Mutex::new(None),
             open,
         }
     }
@@ -390,8 +386,9 @@ impl Hub {
         let mut rec = self.rec.lock().unwrap();
         finish(&mut rec);
         let source = pipewire::source_id(self.runner.as_ref())?;
-        let _ = std::fs::remove_file(&self.rec_path);
-        let process = recording::start_recording(self.spawner.as_ref(), source, &self.rec_path)?;
+        let path = self.rec_path().map_err(Error::from)?;
+        let _ = std::fs::remove_file(&path);
+        let process = recording::start_recording(self.spawner.as_ref(), source, &path)?;
         *rec = Rec::Recording { process, started: Instant::now() };
         Ok(())
     }
@@ -408,7 +405,7 @@ impl Hub {
             Rec::Recording { mut process, .. } => {
                 process.interrupt();
                 process.wait();
-                *rec = Rec::Ready(recording::analyze_file(&self.rec_path)?);
+                *rec = Rec::Ready(recording::analyze_file(&self.rec_path().map_err(Error::from)?)?);
             }
             Rec::Playing { mut process, info, .. } => {
                 process.interrupt();
@@ -427,7 +424,8 @@ impl Hub {
             return Err(Error::InvalidValue("no recording".into()).into());
         };
         let info = info.clone();
-        let process = recording::start_playback(self.spawner.as_ref(), &self.rec_path)?;
+        let path = self.rec_path().map_err(Error::from)?;
+        let process = recording::start_playback(self.spawner.as_ref(), &path)?;
         *rec = Rec::Playing { process, started: Instant::now(), info };
         Ok(())
     }
@@ -451,8 +449,24 @@ impl Hub {
     pub fn cleanup(&self) {
         let mut rec = self.rec.lock().unwrap();
         finish(&mut rec);
-        let _ = std::fs::remove_file(&self.rec_path);
-        let _ = std::fs::remove_dir(self.recording_dir.path());
+        // Dropping the guard removes the directory with the recording in it.
+        self.rec_dir.lock().unwrap().take();
+    }
+
+    /// The recording's file, in a private (0700) directory made on first use:
+    /// not a predictable name in the shared temporary folder, and a temporary
+    /// folder that cannot be written only fails the recording, not the start.
+    fn rec_path(&self) -> std::io::Result<PathBuf> {
+        let mut dir = self.rec_dir.lock().unwrap();
+        if dir.is_none() {
+            *dir = Some(
+                tempfile::Builder::new()
+                    .prefix("pd200x-control-")
+                    .permissions(std::fs::Permissions::from_mode(0o700))
+                    .tempdir_in(&self.temp_dir)?,
+            );
+        }
+        Ok(dir.as_ref().unwrap().path().join("recording.wav"))
     }
 }
 
@@ -629,11 +643,26 @@ mod tests {
                 Box::new(|| Err(Error::NotFound)),
             )
         };
-        let first = make();
-        let second = make();
-        assert_ne!(first.rec_path.parent(), second.rec_path.parent());
-        let mode = std::fs::metadata(first.rec_path.parent().unwrap()).unwrap().permissions().mode();
+        let (first, second) = (make(), make());
+        let (first, second) = (first.rec_path().unwrap(), second.rec_path().unwrap());
+        assert_ne!(first.parent(), second.parent());
+        let mode = std::fs::metadata(first.parent().unwrap()).unwrap().permissions().mode();
         assert_eq!(mode & 0o777, 0o700);
+    }
+
+    #[test]
+    fn an_unwritable_temporary_folder_only_fails_the_recording() {
+        let config = tempfile::tempdir().unwrap();
+        let mut hub = Hub::new(
+            config.path().to_path_buf(),
+            native(),
+            Box::new(FakePipeWire),
+            Box::new(FakeSpawner),
+            Box::new(|| Err(Error::NotFound)),
+        );
+        hub.temp_dir = config.path().join("missing");
+        assert_eq!(hub.start_recording().unwrap_err().kind, "io");
+        assert_eq!(hub.recording_status().unwrap().state, RecordingState::Idle);
     }
 
     #[test]
@@ -648,7 +677,7 @@ mod tests {
         ));
         let watcher = hub.clone();
         hub.start_recording().unwrap();
-        let path = hub.rec_path.clone();
+        let path = hub.rec_path().unwrap();
         let directory = path.parent().unwrap().to_path_buf();
         assert!(path.exists());
         hub.cleanup();
@@ -723,7 +752,7 @@ mod tests {
         hub.play_recording().unwrap();
         // The fake playback has ended by now; the status notices.
         assert_eq!(hub.recording_status().unwrap().state, RecordingState::Ready);
-        let path = hub.rec_path.clone();
+        let path = hub.rec_path().unwrap();
         let directory = path.parent().unwrap().to_path_buf();
         assert!(path.exists());
         drop(hub);
