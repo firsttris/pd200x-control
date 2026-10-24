@@ -114,3 +114,7 @@ The initial window stays invisible while the tray is created. Saved window visib
 reopen it. **Open window** in the tray or a normal application launch shows the existing instance;
 a second launch with `--hidden` leaves it as it is. If the tray library is unavailable or tray
 creation fails, the app shows its window so it remains accessible.
+
+The app cannot tell whether the desktop shows tray icons. GNOME shows them only with the
+AppIndicator extension (Ubuntu ships it, Fedora Workstation does not); without it a `--hidden` start
+runs with neither window nor icon. Start the app normally from the launcher to open its window.

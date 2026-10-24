@@ -41,6 +41,16 @@ pub fn show_window<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
+/// Whether a start asks to stay in the tray (`--hidden`, for a login autostart).
+pub fn asks_hidden(args: impl IntoIterator<Item = impl AsRef<str>>) -> bool {
+    args.into_iter().any(|arg| arg.as_ref() == "--hidden")
+}
+
+/// `--hidden` keeps the window closed only with a tray, or nothing would show the app.
+pub fn shows_window_at_start(hidden: bool, has_tray: bool) -> bool {
+    !hidden || !has_tray
+}
+
 /// The tray needs libayatana-appindicator (or libappindicator) at run time;
 /// tauri panics when neither loads, so look before creating it.
 #[cfg(target_os = "linux")]
@@ -110,5 +120,20 @@ mod tests {
         assert_eq!(labels("de_DE.UTF-8").quit, "Beenden");
         assert_eq!(labels("en_US.UTF-8").quit, "Quit");
         assert_eq!(labels("").open, "Open window");
+    }
+
+    #[test]
+    fn hidden_is_asked_by_its_own_argument() {
+        assert!(asks_hidden(["pd200x-control", "--hidden"]));
+        assert!(!asks_hidden(["pd200x-control"]));
+        assert!(!asks_hidden(vec!["pd200x-control".to_string(), "--hidden=false".to_string()]));
+    }
+
+    #[test]
+    fn the_window_stays_closed_only_hidden_with_a_tray() {
+        assert!(!shows_window_at_start(true, true));
+        assert!(shows_window_at_start(true, false));
+        assert!(shows_window_at_start(false, true));
+        assert!(shows_window_at_start(false, false));
     }
 }

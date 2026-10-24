@@ -95,14 +95,7 @@ fn watch(hub: Arc<hub::Hub>) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let hidden = std::env::args().any(|arg| arg == "--hidden");
-    let mut context = tauri::generate_context!();
-    // Decide visibility after the tray exists, before the first window is mapped.
-    for window in &mut context.config_mut().app.windows {
-        if window.label == "main" {
-            window.visible = false;
-        }
-    }
+    let hidden = tray::asks_hidden(std::env::args());
     let config_dir = store::system_config_dir().expect("HOME must be set");
     let hub = Arc::new(hub::Hub::new(
         config_dir,
@@ -124,7 +117,7 @@ pub fn run() {
     // A Flatpak may only own D-Bus names below its app ID, and the default (the
     // Tauri identifier) is none, so a second start would open a second window.
     let single_instance = tauri_plugin_single_instance::Builder::new().callback(|app, args, _| {
-        if !args.iter().any(|arg| arg == "--hidden") {
+        if !tray::asks_hidden(args) {
             tray::show_window(app);
         }
     });
@@ -148,7 +141,7 @@ pub fn run() {
         .setup(move |app| {
             builder.mount_events(app);
             watch(hub);
-            // Without a tray (no StatusNotifier host) closing the window quits as usual.
+            // Without a tray (no appindicator library) closing the window quits as usual.
             let has_tray = matches!(tray::create(app.handle()), Ok(true));
             if has_tray {
                 if let Some(window) = app.get_webview_window("main") {
@@ -161,12 +154,13 @@ pub fn run() {
                     });
                 }
             }
-            if !hidden || !has_tray {
+            // tauri.conf.json creates the window invisible, so it is decided here, after the tray.
+            if tray::shows_window_at_start(hidden, has_tray) {
                 tray::show_window(app.handle());
             }
             Ok(())
         })
-        .build(context)
+        .build(tauri::generate_context!())
         .expect("error while building pd200x-control")
         .run(move |_, event| {
             if let tauri::RunEvent::Exit = event {

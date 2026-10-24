@@ -28,7 +28,7 @@ flowchart LR
 
 ## Startup visibility
 
-The desktop app creates its main window invisible and decides whether to show it after tray
+The desktop app creates its main window invisible (`tauri.conf.json`) and decides whether to show it after tray
 setup. `--hidden` keeps it in the tray; without a tray, it opens the window. Window-state restoration
 keeps size and position but excludes visibility. The single-instance callback shows the existing
 window for normal launches and leaves it unchanged for `--hidden` launches.
