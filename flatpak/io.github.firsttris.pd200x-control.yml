@@ -106,7 +106,9 @@ modules:
       - node-sources.json
       - cargo-sources.json
     build-commands:
-      - cd app && pnpm install --offline --frozen-lockfile --store-dir=/run/build/pd200x-control/flatpak-node/pnpm-store
+      # pnpm 11+ checks the lockfile against its supply-chain policies (release age, trust) with
+      # the registry's metadata, which the offline sources do not have; CI checked it online.
+      - cd app && pnpm install --offline --frozen-lockfile --config.trust-lockfile=true --store-dir=/run/build/pd200x-control/flatpak-node/pnpm-store
       - cargo --offline fetch --locked
       # tauri.conf.json's beforeBuildCommand builds the frontend (pnpm build) first.
       - cd app && pnpm tauri build --no-bundle
