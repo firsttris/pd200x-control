@@ -88,7 +88,7 @@ modules:
       # pnpm itself (app/package.json's packageManager), run by Node from the SDK extension.
       - type: archive
         url: https://registry.npmjs.org/pnpm/-/pnpm-12.16.1.tgz
-        sha256: 9b0b04e6e79945566917f8411bb6f65fd2f3e1590426904e8500e1acc4b33561
+        sha256: ca362a16f2e1c3cfa81d406f3242446179a0e4aea457ba3e9e6c39e6476aba65
         dest: pnpm
       - type: script
         dest: bin
