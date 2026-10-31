@@ -51,7 +51,7 @@
       customType: "regex",
       managerFilePatterns: ["/^flatpak/[^/]+\\.ya?ml$/", "/^\\.github/workflows/screenshots\\.yml$/"],
       matchStrings: [
-        "https://registry\\.npmjs\\.org/pnpm/-/pnpm-(?<currentValue>\\d+\\.\\d+\\.\\d+)\\.tgz",
+        "https://registry\\.npmjs\\.org/@pnpm/exe\\.linux-[a-z0-9]+/-/exe\\.linux-[a-z0-9]+-(?<currentValue>\\d+\\.\\d+\\.\\d+)\\.tgz",
         "pnpm@(?<currentValue>\\d+\\.\\d+\\.\\d+)",
       ],
       depNameTemplate: "pnpm",

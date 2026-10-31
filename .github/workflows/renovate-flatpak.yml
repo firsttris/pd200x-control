@@ -32,11 +32,12 @@ jobs:
         run: |
           set -euo pipefail
           manifest=flatpak/io.github.firsttris.pd200x-control.yml
-          url=$(grep -oE 'https://registry\.npmjs\.org/pnpm/-/pnpm-[0-9.]+\.tgz' "$manifest")
-          sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
-          echo "$url $sha"
-          # The sha256 line right after the url, the file keeps its layout
-          python3 - "$manifest" "$url" "$sha" <<'PY'
+          # One native pnpm binary per architecture (@pnpm/exe.linux-*)
+          for url in $(grep -oE 'https://registry\.npmjs\.org/@pnpm/exe\.linux-[a-z0-9]+/-/exe\.linux-[a-z0-9]+-[0-9.]+\.tgz' "$manifest"); do
+            sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+            echo "$url $sha"
+            # The sha256 line right after the url, the file keeps its layout
+            python3 - "$manifest" "$url" "$sha" <<'PY'
           import re, sys
           path, url, sha = sys.argv[1:]
           text = open(path).read()
@@ -45,6 +46,7 @@ jobs:
               sys.exit(f"no sha256 line after {url}")
           open(path, "w").write(new)
           PY
+          done
 
       - name: Install flatpak-builder-tools
         run: |

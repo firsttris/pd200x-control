@@ -85,16 +85,24 @@ modules:
           - app/dist
           - app/src/paraglide
           - target
-      # pnpm itself (app/package.json's packageManager), run by Node from the SDK extension.
+      # pnpm itself (app/package.json's packageManager). Since pnpm 11 the `pnpm` package only
+      # wraps a native binary that it downloads on first use, which the offline build cannot; so
+      # the package with the binary for the build's architecture.
       - type: archive
-        url: https://registry.npmjs.org/pnpm/-/pnpm-12.16.1.tgz
-        sha256: ca362a16f2e1c3cfa81d406f3242446179a0e4aea457ba3e9e6c39e6476aba65
+        only-arches: [x86_64]
+        url: https://registry.npmjs.org/@pnpm/exe.linux-x64/-/exe.linux-x64-12.16.1.tgz
+        sha256: c9e9d45f7844d32f8717c4cac7c51aee2a7318cd56afd95eb253125b09d6bc32
+        dest: pnpm
+      - type: archive
+        only-arches: [aarch64]
+        url: https://registry.npmjs.org/@pnpm/exe.linux-arm64/-/exe.linux-arm64-12.16.1.tgz
+        sha256: 2895aac19e24b17e70d84ca57c934f5dfcee2292c6191fe3ac624706586b80cd
         dest: pnpm
       - type: script
         dest: bin
         dest-filename: pnpm
         commands:
-          - exec node /run/build/pd200x-control/pnpm/bin/pnpm.cjs "$@"
+          - exec /run/build/pd200x-control/pnpm/pnpm "$@"
       - node-sources.json
       - cargo-sources.json
     build-commands:
