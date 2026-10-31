@@ -59,8 +59,8 @@ modules:
     sources:
       - type: git
         url: https://github.com/PipeWire/wireplumber.git
-        tag: 0.5.18
-        commit: 81606cbb32d29df20147d1b68b662c1082654d81
+        tag: 0.5.19
+        commit: 4ab992fa2931ae2b17ef73508b1370030b7878c3
 
   - name: pd200x-control
     buildsystem: simple
