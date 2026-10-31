@@ -45,10 +45,10 @@ jobs:
     # `inputs` is empty outside workflow_call, and `null != false` is false in a workflow
     # expression, so the input is compared as text (as in Prefixr's flatpak.yml).
     if: ${{ !github.event.pull_request.draft && format('{0}', inputs.check-sources) != 'false' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install flatpak-builder-tools
         run: |
@@ -73,13 +73,13 @@ jobs:
   bundle:
     name: Build the Flatpak bundle
     if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-51
       options: --privileged
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
 

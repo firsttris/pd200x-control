@@ -27,10 +27,10 @@ jobs:
     name: Rust · fmt, clippy, unit + integration tests
     # Draft pull requests do not build; "Ready for review" starts the run
     if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # From the Actions cache: the Ubuntu mirror is sometimes slow
       - name: System packages (Tauri)
         uses: firsttris/workflows/actions/apt-install@main
@@ -51,19 +51,19 @@ jobs:
   frontend:
     name: Frontend · lint, typecheck, unit + component tests, build
     if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     defaults:
       run:
         working-directory: app
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: app/package.json
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
           cache-dependency-path: app/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
@@ -75,7 +75,7 @@ jobs:
   playwright-image:
     name: Frontend · Playwright image
     if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       image: ${{ steps.version.outputs.image }}
     steps:
@@ -87,7 +87,7 @@ jobs:
   e2e:
     name: Frontend · Playwright E2E (Chromium, WebKit)
     needs: playwright-image
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     # The official image of the @playwright/test version in the lockfile: browsers, their libraries
     # and fonts are in it, so no playwright install runs and every run sees the same browser.
@@ -98,18 +98,18 @@ jobs:
       run:
         working-directory: app
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: app/package.json
       # Node comes with the image; this only caches the pnpm store.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           cache: pnpm
           cache-dependency-path: app/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
