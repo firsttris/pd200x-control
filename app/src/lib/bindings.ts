@@ -6,7 +6,7 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	snapshot: () => typedError<Snapshot, CmdError>(__TAURI_INVOKE("snapshot")),
+	snapshot: () => typedError<Snapshot_Serialize, CmdError>(__TAURI_INVOKE("snapshot")),
 	level: () => __TAURI_INVOKE<Level>("level"),
 	applyChange: (change: Change) => typedError<null, CmdError>(__TAURI_INVOKE("apply_change", { change })),
 	applyEq: (id: string) => typedError<null, CmdError>(__TAURI_INVOKE("apply_eq", { id })),
@@ -19,9 +19,9 @@ export const commands = {
 	setRestoreOnConnect: (on: boolean) => typedError<null, CmdError>(__TAURI_INVOKE("set_restore_on_connect", { on })),
 	setProtected: (on: boolean) => typedError<null, CmdError>(__TAURI_INVOKE("set_protected", { on })),
 	startRecording: () => typedError<null, CmdError>(__TAURI_INVOKE("start_recording")),
-	stopRecording: () => typedError<RecordingStatus, CmdError>(__TAURI_INVOKE("stop_recording")),
+	stopRecording: () => typedError<RecordingStatus_Serialize, CmdError>(__TAURI_INVOKE("stop_recording")),
 	playRecording: () => typedError<null, CmdError>(__TAURI_INVOKE("play_recording")),
-	recordingStatus: () => typedError<RecordingStatus, CmdError>(__TAURI_INVOKE("recording_status")),
+	recordingStatus: () => typedError<RecordingStatus_Serialize, CmdError>(__TAURI_INVOKE("recording_status")),
 };
 
 /* Constants */
@@ -139,7 +139,19 @@ export type RecordingInfo = {
 export type RecordingState = "idle" | "recording" | "ready" | "playing";
 
 /**  The test recording, polled while its card is on screen. */
-export type RecordingStatus = {
+export type RecordingStatus = RecordingStatus_Serialize | RecordingStatus_Deserialize;
+
+/**  The test recording, polled while its card is on screen. */
+export type RecordingStatus_Deserialize = {
+	state: RecordingState,
+	/**  Since the recording or the playback started. */
+	elapsedMs: number,
+	/**  The last finished recording. */
+	info?: RecordingInfo | null,
+};
+
+/**  The test recording, polled while its card is on screen. */
+export type RecordingStatus_Serialize = {
 	state: RecordingState,
 	/**  Since the recording or the playback started. */
 	elapsedMs: number,
@@ -151,12 +163,15 @@ export type RecordingStatus = {
 export type RgbColor = "white" | "red" | "orange" | "yellow" | "green" | "cyan" | "blue" | "purple" | "rainbow";
 
 /**  Everything the app keeps in `settings.json`. */
-export type Settings = {
+export type Settings = Settings_Serialize | Settings_Deserialize;
+
+/**  Everything the app keeps in `settings.json`. */
+export type Settings_Deserialize = {
 	/**
 	 *  `None` until the user changed the tone in the app; only then is it
 	 *  written to the microphone when it is plugged in.
 	 */
-	tone?: Tone | null,
+	tone?: Tone_Deserialize | null,
 	lighting?: Lighting | null,
 	profiles?: Profile[],
 	/**
@@ -168,8 +183,51 @@ export type Settings = {
 	boostDb?: number | null,
 };
 
+/**  Everything the app keeps in `settings.json`. */
+export type Settings_Serialize = {
+	/**
+	 *  `None` until the user changed the tone in the app; only then is it
+	 *  written to the microphone when it is plugged in.
+	 */
+	tone: Tone_Serialize | null,
+	lighting: Lighting | null,
+	profiles: Profile[],
+	/**
+	 *  Send `tone` and `lighting` to the microphone when it is plugged in. Off
+	 *  by default: the microphone keeps its settings and the app reads them.
+	 */
+	restoreOnConnect: boolean,
+	/**  The software boost to go back to when it is switched on again. */
+	boostDb: number | null,
+};
+
 /**  What the window shows; polled about once a second. */
-export type Snapshot = {
+export type Snapshot = Snapshot_Serialize | Snapshot_Deserialize;
+
+/**  What the window shows; polled about once a second. */
+export type Snapshot_Deserialize = {
+	/**  `None` while no microphone is open. */
+	live?: LiveState | null,
+	/**  Why there is no microphone (an error kind), `None` when connected. */
+	problem?: string | null,
+	/**  The software boost in dB; `None` when PipeWire has no source for it. */
+	boostDb?: number | null,
+	/**  Apps (Teams, Slack, browsers) may not change the microphone volume. */
+	protected: boolean,
+	/**
+	 *  The app runs in the Flatpak sandbox: the user restarts pipewire-pulse
+	 *  after switching `protected`.
+	 */
+	sandboxed: boolean,
+	/**  EQ and dynamics as the microphone has them (read when it connects). */
+	tone?: Tone_Deserialize | null,
+	/**  The ring light as the microphone has it. */
+	lighting?: Lighting | null,
+	settings: Settings_Deserialize,
+};
+
+/**  What the window shows; polled about once a second. */
+export type Snapshot_Serialize = {
 	/**  `None` while no microphone is open. */
 	live: LiveState | null,
 	/**  Why there is no microphone (an error kind), `None` when connected. */
@@ -184,14 +242,27 @@ export type Snapshot = {
 	 */
 	sandboxed: boolean,
 	/**  EQ and dynamics as the microphone has them (read when it connects). */
-	tone: Tone | null,
+	tone: Tone_Serialize | null,
 	/**  The ring light as the microphone has it. */
 	lighting: Lighting | null,
-	settings: Settings,
+	settings: Settings_Serialize,
 };
 
 /**  EQ, compressor and limiter, as read from the device or remembered. */
-export type Tone = {
+export type Tone = Tone_Serialize | Tone_Deserialize;
+
+/**  EQ, compressor and limiter, as read from the device or remembered. */
+export type Tone_Deserialize = {
+	/**  Id of the preset or own profile the EQ came from; `None` once changed by hand. */
+	source?: string | null,
+	/**  Always [`EQ_BANDS`] entries. */
+	eq: EqBand[],
+	compressor: Dynamics,
+	limiter: Dynamics,
+};
+
+/**  EQ, compressor and limiter, as read from the device or remembered. */
+export type Tone_Serialize = {
 	/**  Id of the preset or own profile the EQ came from; `None` once changed by hand. */
 	source: string | null,
 	/**  Always [`EQ_BANDS`] entries. */

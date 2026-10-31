@@ -1016,19 +1016,6 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/darling/darling-0.23.0.crate",
-        "sha256": "25ae13da2f202d56bd7f91c25fba009e7717a1e4a1cc98a76d844b65ae912e9d",
-        "dest": "cargo/vendor/darling-0.23.0"
-    },
-    {
-        "type": "inline",
-        "contents": "{\"package\": \"25ae13da2f202d56bd7f91c25fba009e7717a1e4a1cc98a76d844b65ae912e9d\", \"files\": {}}",
-        "dest": "cargo/vendor/darling-0.23.0",
-        "dest-filename": ".cargo-checksum.json"
-    },
-    {
-        "type": "archive",
-        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/darling/darling-0.24.1.crate",
         "sha256": "ed17f5901b6630b993ca003def43f2f8ef4014fc13b047b57aad617ff32bc2ec",
         "dest": "cargo/vendor/darling-0.24.1"
@@ -1042,19 +1029,6 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/darling_core/darling_core-0.23.0.crate",
-        "sha256": "9865a50f7c335f53564bb694ef660825eb8610e0a53d3e11bf1b0d3df31e03b0",
-        "dest": "cargo/vendor/darling_core-0.23.0"
-    },
-    {
-        "type": "inline",
-        "contents": "{\"package\": \"9865a50f7c335f53564bb694ef660825eb8610e0a53d3e11bf1b0d3df31e03b0\", \"files\": {}}",
-        "dest": "cargo/vendor/darling_core-0.23.0",
-        "dest-filename": ".cargo-checksum.json"
-    },
-    {
-        "type": "archive",
-        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/darling_core/darling_core-0.24.1.crate",
         "sha256": "6837e2cf7485aaae18f86181d2f0e9a7ed297a025e220aeabf63fdebd3a2ddff",
         "dest": "cargo/vendor/darling_core-0.24.1"
@@ -1063,19 +1037,6 @@
         "type": "inline",
         "contents": "{\"package\": \"6837e2cf7485aaae18f86181d2f0e9a7ed297a025e220aeabf63fdebd3a2ddff\", \"files\": {}}",
         "dest": "cargo/vendor/darling_core-0.24.1",
-        "dest-filename": ".cargo-checksum.json"
-    },
-    {
-        "type": "archive",
-        "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/darling_macro/darling_macro-0.23.0.crate",
-        "sha256": "ac3984ec7bd6cfa798e62b4a642426a5be0e68f9401cfc2a01e3fa9ea2fcdb8d",
-        "dest": "cargo/vendor/darling_macro-0.23.0"
-    },
-    {
-        "type": "inline",
-        "contents": "{\"package\": \"ac3984ec7bd6cfa798e62b4a642426a5be0e68f9401cfc2a01e3fa9ea2fcdb8d\", \"files\": {}}",
-        "dest": "cargo/vendor/darling_macro-0.23.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4383,66 +4344,66 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/specta/specta-2.0.0-rc.25.crate",
-        "sha256": "38f9a30cbcbb7011f1da7d73483983bf838af123883e45f2b36ed76328df9c50",
-        "dest": "cargo/vendor/specta-2.0.0-rc.25"
+        "url": "https://static.crates.io/crates/specta/specta-2.0.0-rc.26.crate",
+        "sha256": "ed155e448f42fc4be7a5cbc12bd43f6c549981f7c32fcba429ff6bc57cc4f30c",
+        "dest": "cargo/vendor/specta-2.0.0-rc.26"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"38f9a30cbcbb7011f1da7d73483983bf838af123883e45f2b36ed76328df9c50\", \"files\": {}}",
-        "dest": "cargo/vendor/specta-2.0.0-rc.25",
+        "contents": "{\"package\": \"ed155e448f42fc4be7a5cbc12bd43f6c549981f7c32fcba429ff6bc57cc4f30c\", \"files\": {}}",
+        "dest": "cargo/vendor/specta-2.0.0-rc.26",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/specta-macros/specta-macros-2.0.0-rc.25.crate",
-        "sha256": "2ce14957ecc2897f1f848b8255b6531d13ddf49cbcf506b7c2c9fb1d005593bb",
-        "dest": "cargo/vendor/specta-macros-2.0.0-rc.25"
+        "url": "https://static.crates.io/crates/specta-macros/specta-macros-2.0.0-rc.26.crate",
+        "sha256": "b34b2516e16a9ddd3dc4e73cd6454cfe21fe209f8cb5a6f37346fe3774d759b3",
+        "dest": "cargo/vendor/specta-macros-2.0.0-rc.26"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"2ce14957ecc2897f1f848b8255b6531d13ddf49cbcf506b7c2c9fb1d005593bb\", \"files\": {}}",
-        "dest": "cargo/vendor/specta-macros-2.0.0-rc.25",
+        "contents": "{\"package\": \"b34b2516e16a9ddd3dc4e73cd6454cfe21fe209f8cb5a6f37346fe3774d759b3\", \"files\": {}}",
+        "dest": "cargo/vendor/specta-macros-2.0.0-rc.26",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/specta-serde/specta-serde-0.0.12.crate",
-        "sha256": "ee8a72b755ddb8949fd8f17c5db43f0e8a806ea587d9bc602ee3f73240c00029",
-        "dest": "cargo/vendor/specta-serde-0.0.12"
+        "url": "https://static.crates.io/crates/specta-serde/specta-serde-0.0.13.crate",
+        "sha256": "4983177ed0eb28235080261953de5f9ebae8a2d107851b5852420bd2ab246245",
+        "dest": "cargo/vendor/specta-serde-0.0.13"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"ee8a72b755ddb8949fd8f17c5db43f0e8a806ea587d9bc602ee3f73240c00029\", \"files\": {}}",
-        "dest": "cargo/vendor/specta-serde-0.0.12",
+        "contents": "{\"package\": \"4983177ed0eb28235080261953de5f9ebae8a2d107851b5852420bd2ab246245\", \"files\": {}}",
+        "dest": "cargo/vendor/specta-serde-0.0.13",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/specta-typescript/specta-typescript-0.0.12.crate",
-        "sha256": "639404ee95557f2f8b7e4cb773ffefd45304c7ab8ba21ac83b69051595e083c0",
-        "dest": "cargo/vendor/specta-typescript-0.0.12"
+        "url": "https://static.crates.io/crates/specta-typescript/specta-typescript-0.0.13.crate",
+        "sha256": "3ecbe75dc1d27b36141b50b02b7c73bed00945710cee6edffa86d296a159a6f9",
+        "dest": "cargo/vendor/specta-typescript-0.0.13"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"639404ee95557f2f8b7e4cb773ffefd45304c7ab8ba21ac83b69051595e083c0\", \"files\": {}}",
-        "dest": "cargo/vendor/specta-typescript-0.0.12",
+        "contents": "{\"package\": \"3ecbe75dc1d27b36141b50b02b7c73bed00945710cee6edffa86d296a159a6f9\", \"files\": {}}",
+        "dest": "cargo/vendor/specta-typescript-0.0.13",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/specta-util/specta-util-0.0.12.crate",
-        "sha256": "29b1fc02b446f7244a92924fe68c0555921209f1d342990cd1539e9138e69502",
-        "dest": "cargo/vendor/specta-util-0.0.12"
+        "url": "https://static.crates.io/crates/specta-util/specta-util-0.0.13.crate",
+        "sha256": "d9bf531215ea70fba8264edecf98f12600462cf359f2038602a47aeda5ecd5b8",
+        "dest": "cargo/vendor/specta-util-0.0.13"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"29b1fc02b446f7244a92924fe68c0555921209f1d342990cd1539e9138e69502\", \"files\": {}}",
-        "dest": "cargo/vendor/specta-util-0.0.12",
+        "contents": "{\"package\": \"d9bf531215ea70fba8264edecf98f12600462cf359f2038602a47aeda5ecd5b8\", \"files\": {}}",
+        "dest": "cargo/vendor/specta-util-0.0.13",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4760,27 +4721,27 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/tauri-specta/tauri-specta-2.0.0-rc.25.crate",
-        "sha256": "ee080f36d2ac17ce2f3a82fb53f02d664e8345457de51b56dad3c394dacc41a2",
-        "dest": "cargo/vendor/tauri-specta-2.0.0-rc.25"
+        "url": "https://static.crates.io/crates/tauri-specta/tauri-specta-2.0.0-rc.26.crate",
+        "sha256": "fe71fc209fa4c49f959644f1ae2d70f72d5675bcb3d3ad8518122fa7b330994e",
+        "dest": "cargo/vendor/tauri-specta-2.0.0-rc.26"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"ee080f36d2ac17ce2f3a82fb53f02d664e8345457de51b56dad3c394dacc41a2\", \"files\": {}}",
-        "dest": "cargo/vendor/tauri-specta-2.0.0-rc.25",
+        "contents": "{\"package\": \"fe71fc209fa4c49f959644f1ae2d70f72d5675bcb3d3ad8518122fa7b330994e\", \"files\": {}}",
+        "dest": "cargo/vendor/tauri-specta-2.0.0-rc.26",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/tauri-specta-macros/tauri-specta-macros-2.0.0-rc.25.crate",
-        "sha256": "6a59dfdce06c98d8d211619bea5fdb39486d8a8c558e12b2d2ce255972320012",
-        "dest": "cargo/vendor/tauri-specta-macros-2.0.0-rc.25"
+        "url": "https://static.crates.io/crates/tauri-specta-macros/tauri-specta-macros-2.0.0-rc.26.crate",
+        "sha256": "dbf5689a1dbf2611e2351b79ba042ca089d0a3ce45274695e79084cd732a5aec",
+        "dest": "cargo/vendor/tauri-specta-macros-2.0.0-rc.26"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"6a59dfdce06c98d8d211619bea5fdb39486d8a8c558e12b2d2ce255972320012\", \"files\": {}}",
-        "dest": "cargo/vendor/tauri-specta-macros-2.0.0-rc.25",
+        "contents": "{\"package\": \"dbf5689a1dbf2611e2351b79ba042ca089d0a3ce45274695e79084cd732a5aec\", \"files\": {}}",
+        "dest": "cargo/vendor/tauri-specta-macros-2.0.0-rc.26",
         "dest-filename": ".cargo-checksum.json"
     },
     {

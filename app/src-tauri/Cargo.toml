@@ -23,7 +23,7 @@ pd200x-core = { workspace = true, features = ["specta"] }
 serde.workspace = true
 serde_json.workspace = true
 specta.workspace = true
-specta-typescript = "0.0.14"
+specta-typescript = "0.0.13"
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-specta = { version = "=2.0.0-rc.26", features = ["derive", "typescript"] }
 tauri-plugin-single-instance = "2"
