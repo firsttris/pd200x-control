@@ -1,0 +1,78 @@
+name: Renovate · Flatpak sources
+
+# On a Renovate branch (.github/renovate.json5): Renovate changes versions and lock files only, but
+# the Flatpak builds offline. This sets the sha256 of the pnpm the manifest downloads and
+# regenerates flatpak/cargo-sources.json and node-sources.json (flatpak/update-sources.sh), commits
+# them and starts CI and the Flatpak workflow on the new commit. A commit pushed with the
+# workflow's token starts no workflow by itself, hence the explicit runs.
+on:
+  push:
+    branches: ["renovate/**"]
+    paths:
+      - "flatpak/*.yml"
+      - "Cargo.lock"
+      - "app/pnpm-lock.yaml"
+      - "app/package.json"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: renovate-flatpak-${{ github.ref }}
+
+jobs:
+  sources:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: sha256 of the Flatpak's pnpm
+        run: |
+          set -euo pipefail
+          manifest=flatpak/io.github.firsttris.pd200x-control.yml
+          url=$(grep -oE 'https://registry\.npmjs\.org/pnpm/-/pnpm-[0-9.]+\.tgz' "$manifest")
+          sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+          echo "$url $sha"
+          # The sha256 line right after the url, the file keeps its layout
+          python3 - "$manifest" "$url" "$sha" <<'PY'
+          import re, sys
+          path, url, sha = sys.argv[1:]
+          text = open(path).read()
+          new = re.sub(r"(url: " + re.escape(url) + r"\n\s+sha256: )[0-9a-f]{64}", r"\g<1>" + sha, text)
+          if new == text and sha not in text:
+              sys.exit(f"no sha256 line after {url}")
+          open(path, "w").write(new)
+          PY
+
+      - name: Install flatpak-builder-tools
+        run: |
+          set -euo pipefail
+          # The commit flatpak.yml checks the sources with
+          commit=$(sed -n 's/^  FBT_COMMIT: //p' .github/workflows/flatpak.yml)
+          git init -q "$RUNNER_TEMP/fbt"
+          git -C "$RUNNER_TEMP/fbt" fetch -q --depth 1 https://github.com/flatpak/flatpak-builder-tools.git "$commit"
+          git -C "$RUNNER_TEMP/fbt" checkout -q FETCH_HEAD
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -q "$RUNNER_TEMP/fbt/node" aiohttp tomlkit PyYAML
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+          echo "FBT=$RUNNER_TEMP/fbt" >> "$GITHUB_ENV"
+
+      - name: Regenerate the sources
+        run: flatpak/update-sources.sh
+
+      - name: Commit and start CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet; then
+            echo "sha256 and sources already match"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Flatpak sources and pnpm sha256 for the Renovate update"
+          git push
+          gh workflow run ci.yml --ref "$GITHUB_REF_NAME"
+          gh workflow run flatpak.yml --ref "$GITHUB_REF_NAME"

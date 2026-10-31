@@ -94,7 +94,11 @@ The manifest builds from the checkout without network access, as Flathub require
   `app/pnpm-lock.yaml`) hold every download. After changing either lock file, run
   `flatpak/update-sources.sh` (with [flatpak-builder-tools](https://github.com/flatpak/flatpak-builder-tools)
   in `FBT`) and commit the results; the **Flatpak** workflow checks that they match and builds the
-  bundle on pull requests that touch the Flatpak or a lock file.
+  bundle on pull requests that touch the Flatpak or a lock file. On Renovate's branches
+  `renovate-flatpak.yml` does this (and the pnpm sha256) by itself.
+- Renovate (`.github/renovate.json5`) opens the pull requests for a new GNOME runtime (manifest,
+  CI image, this page), the shared-modules submodule, WirePlumber, pnpm and Tauri; each lists what
+  to check before merging.
 - pnpm itself comes from the npm registry as a source; Node and Rust are the SDK extensions.
 - The `<release>` entry of the metainfo, which Flatpak shows as the app's version, is set from
   `Cargo.toml` when the bundle is built, since **Bump version** does not rewrite the metainfo.

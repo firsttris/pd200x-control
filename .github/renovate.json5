@@ -1,0 +1,134 @@
+// Renovate (GitHub App, https://github.com/apps/renovate): a pull request for each new release of
+// what pd200x-control builds on, plus the "Dependency Dashboard" issue listing what is open.
+// Only those: the GNOME runtime of the Flatpak (manifest, CI image, docs), Flathub's
+// shared-modules (tray library, Lua), the WirePlumber the Flatpak builds for wpctl, pnpm (package.json,
+// the Flatpak's pnpm source, screenshots.yml) and Tauri with tauri-specta. The other crates and npm
+// packages and the actions are not tracked here. A changed lock file or pnpm needs new Flatpak
+// sources and a sha256 that Renovate cannot make: renovate-flatpak.yml adds them on the Renovate
+// branch. Check with `npx --package renovate renovate-config-validator .github/renovate.json5`.
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended"],
+  enabledManagers: ["cargo", "npm", "git-submodules", "custom.regex"],
+  timezone: "Europe/Berlin",
+  labels: ["dependencies"],
+  // Nothing merges itself: each of these needs the checks in its pull request read by a person
+  automerge: false,
+  // flatpak/shared-modules (Renovate leaves submodules alone unless told)
+  "git-submodules": {
+    enabled: true,
+  },
+  customManagers: [
+    {
+      // The GNOME runtime: the manifest, the image the Flatpak workflow builds in and the docs.
+      // The image's tags (gnome-50, gnome-51) say which runtimes Flathub's CI images exist for.
+      customType: "regex",
+      managerFilePatterns: [
+        "/^flatpak/[^/]+\\.ya?ml$/",
+        "/^\\.github/workflows/flatpak\\.yml$/",
+        "/^docs/development\\.md$/",
+      ],
+      matchStrings: [
+        'runtime: org\\.gnome\\.Platform\\nruntime-version: "(?<currentValue>\\d+)"',
+        "flatpak-github-actions:gnome-(?<currentValue>\\d+)",
+        "on the GNOME (?<currentValue>\\d+)\\s+runtime",
+      ],
+      depNameTemplate: "ghcr.io/flathub-infra/flatpak-github-actions",
+      datasourceTemplate: "docker",
+      extractVersionTemplate: "^gnome-(?<version>\\d+)$",
+      versioningTemplate: "regex:^(?<major>\\d+)$",
+    },
+    {
+      // Git sources of the Flatpak's modules: the tag and the commit it must be
+      customType: "regex",
+      managerFilePatterns: ["/^flatpak/[^/]+\\.ya?ml$/"],
+      matchStrings: [
+        "url: https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+?)\\.git\\n\\s+tag: \"?(?<currentValue>[^\"\\n]+)\"?\\n\\s+commit: (?<currentDigest>[0-9a-f]{40})",
+      ],
+      datasourceTemplate: "github-tags",
+      versioningTemplate: "loose",
+    },
+    {
+      // pnpm of the Flatpak (its sha256 comes from renovate-flatpak.yml) and of the screenshots
+      customType: "regex",
+      managerFilePatterns: ["/^flatpak/[^/]+\\.ya?ml$/", "/^\\.github/workflows/screenshots\\.yml$/"],
+      matchStrings: [
+        "https://registry\\.npmjs\\.org/pnpm/-/pnpm-(?<currentValue>\\d+\\.\\d+\\.\\d+)\\.tgz",
+        "pnpm@(?<currentValue>\\d+\\.\\d+\\.\\d+)",
+      ],
+      depNameTemplate: "pnpm",
+      datasourceTemplate: "npm",
+    },
+  ],
+  packageRules: [
+    {
+      // From the package managers only Tauri and pnpm (below)
+      matchManagers: ["cargo", "npm"],
+      enabled: false,
+    },
+    {
+      matchPackageNames: ["ghcr.io/flathub-infra/flatpak-github-actions"],
+      groupName: "GNOME runtime",
+      commitMessageTopic: "GNOME runtime",
+      sourceUrl: "https://github.com/flathub-infra/flatpak-github-actions",
+      prBodyNotes: [
+        "The runtime, the image of the Flatpak workflow and docs/development.md move together. Before merging: the SDK extensions `org.freedesktop.Sdk.Extension.node24` and `rust-stable` must exist for the new runtime's freedesktop branch (`flatpak remote-info flathub org.freedesktop.Sdk.Extension.node24//<branch>`); the Flatpak workflow of this PR builds the bundle, including WirePlumber and the shared modules. Then install the bundle and check the tray icon and the system microphone volume (wpctl) as in docs/installation.md#flatpak.",
+      ],
+    },
+    {
+      matchManagers: ["git-submodules"],
+      groupName: "Flathub shared-modules",
+      commitMessageTopic: "Flathub shared-modules",
+      prBodyNotes: [
+        "libayatana-appindicator (tray icon) and lua5.4 (for WirePlumber) come from here. The Flatpak workflow of this PR builds them; check the tray icon of the bundle.",
+      ],
+    },
+    {
+      matchPackageNames: ["PipeWire/wireplumber"],
+      groupName: "WirePlumber",
+      commitMessageTopic: "WirePlumber",
+      sourceUrl: "https://gitlab.freedesktop.org/pipewire/wireplumber",
+      prBodyNotes: [
+        "Only `wpctl` for the software boost is used. Before merging: read the NEWS for changes to `wpctl set-volume`/`get-volume` and the meson options in the manifest; with the bundle of this PR, set the system microphone volume above 100 % and check that it changes (docs/development.md#flatpak).",
+      ],
+    },
+    {
+      // package.json's packageManager, the Flatpak's pnpm and screenshots.yml in one PR: the
+      // Flatpak builds offline with the pnpm of its manifest
+      matchPackageNames: ["pnpm"],
+      enabled: true,
+      groupName: "pnpm",
+      sourceUrl: "https://github.com/pnpm/pnpm",
+      prBodyNotes: [
+        "`renovate-flatpak.yml` sets the sha256 of the new pnpm in the Flatpak manifest on this branch. The Flatpak workflow builds the bundle with it (`pnpm install --offline`).",
+      ],
+    },
+    {
+      // Tauri and tauri-specta: the crates and the npm packages in one PR, since the CLI wants
+      // them on matching versions. Tauri 3 alphas are left out (stable releases only).
+      matchManagers: ["cargo", "npm"],
+      matchPackageNames: [
+        "tauri",
+        "tauri-build",
+        "tauri-plugin-*",
+        "@tauri-apps/**",
+        "specta",
+        "specta-typescript",
+        "tauri-specta",
+      ],
+      enabled: true,
+      groupName: "Tauri",
+      sourceUrl: "https://github.com/tauri-apps/tauri",
+      prBodyNotes: [
+        "`renovate-flatpak.yml` regenerates `flatpak/cargo-sources.json` and `node-sources.json` for the new lock files on this branch and starts CI and the Flatpak workflow. Before merging: `cargo test` fails when `app/src/lib/bindings.ts` is outdated (run `just bindings` and commit it); `specta` must stay on the release candidate the new `tauri-specta` asks for; try the tray, `--hidden`, single instance and the remembered window size in the AppImage or the bundle.",
+      ],
+    },
+    {
+      // specta and tauri-specta are release candidates, pinned exactly (=2.0.0-rc.x)
+      matchManagers: ["cargo"],
+      matchPackageNames: ["specta", "specta-typescript", "tauri-specta"],
+      ignoreUnstable: false,
+      respectLatest: false,
+    },
+  ],
+}
