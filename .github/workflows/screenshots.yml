@@ -9,7 +9,7 @@ jobs:
   screenshots:
     uses: firsttris/workflows/.github/workflows/screenshots.yml@v1
     with:
-      install: npm install --global pnpm@10.28.0 && pnpm --dir app install --frozen-lockfile
+      install: npm install --global pnpm@10.34.9 && pnpm --dir app install --frozen-lockfile
       lockfile: app/pnpm-lock.yaml
       command: bash scripts/screenshots.sh
       paths: |
