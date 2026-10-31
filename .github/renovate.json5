@@ -96,8 +96,13 @@
     },
     {
       // package.json's packageManager, the Flatpak's pnpm and screenshots.yml in one PR: the
-      // Flatpak builds offline with the pnpm of its manifest
+      // Flatpak builds offline with the pnpm of its manifest. pnpm stays below 11 because
+      // flatpak-node-generator (flatpak-builder-tools) cannot yet fill the store layout of newer
+      // pnpm: the offline install fails with ERR_PNPM_NO_OFFLINE_TARBALL (#9). Raise it once
+      // flatpak-builder-tools supports it; the Flatpak changes pnpm 12 needs are on #9's branch
+      // (da73b00, e5e99a5).
       matchPackageNames: ["pnpm"],
+      allowedVersions: "<11",
       enabled: true,
       groupName: "pnpm",
       sourceUrl: "https://github.com/pnpm/pnpm",
