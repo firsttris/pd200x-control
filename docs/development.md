@@ -2,7 +2,8 @@
 
 ## Setup
 
-Rust (stable, 1.89 or newer), Node 22 with pnpm, `just`, and for the desktop app WebKitGTK 4.1,
+Rust (stable, 1.89 or newer), [Bun](https://bun.sh/) 1.4 (the version in `packageManager` of
+`app/package.json`), `just`, and for the desktop app WebKitGTK 4.1,
 libayatana-appindicator and librsvg. On Fedora-based systems (also Bazzite and Silverblue) a toolbox
 keeps the host untouched:
 
@@ -10,7 +11,7 @@ keeps the host untouched:
 git clone https://github.com/firsttris/pd200x-control && cd pd200x-control
 bash packaging/toolbox.sh           # creates the toolbox "pd200x-dev"
 toolbox enter pd200x-dev
-just setup                          # pnpm install
+just setup                          # bun install
 just                                # lint and every test
 ```
 
@@ -56,7 +57,9 @@ How the pieces fit is on [How it works](how-it-works.md).
   snapshot updates, the mock backend, and every page clicked through against the mock backend.
 - **Playwright**: the frontend in Chromium (and WebKit in CI, like Tauri's WebKitGTK) against the
   mock backend: level meter, dragging sliders and EQ points, the level finder, profiles, light,
-  the test recording, English and German.
+  the test recording, English and German. Its runner runs on Bun (`bun --bun playwright test`), as
+  do Vite and Vitest, so Node is not needed; `app/package.json` is `"type": "module"`, since under
+  Bun a CommonJS spec would stop at the TypeScript syntax.
 - **The bindings test** fails when `bindings.ts` no longer matches the Rust commands.
 
 The mock backend (`app/src/lib/mock/backend.ts`) must behave like `hub.rs`: what one does, the other
@@ -91,15 +94,20 @@ flatpak run org.flatpak.Builder --user --install --force-clean --disable-rofiles
 The manifest builds from the checkout without network access, as Flathub requires:
 
 - `flatpak/cargo-sources.json` (from `Cargo.lock`) and `flatpak/node-sources.json` (from
-  `app/pnpm-lock.yaml`) hold every download. After changing either lock file, run
+  `app/bun.lock`) hold every download. After changing either lock file, run
   `flatpak/update-sources.sh` (with [flatpak-builder-tools](https://github.com/flatpak/flatpak-builder-tools)
-  in `FBT`) and commit the results; the **Flatpak** workflow checks that they match and builds the
+  in `FBT` for `Cargo.lock`) and commit the results; the **Flatpak** workflow checks that they match and builds the
   bundle on pull requests that touch the Flatpak or a lock file. On Renovate's branches
-  `renovate-flatpak.yml` does this (and the pnpm sha256) by itself.
+  `renovate-flatpak.yml` does this (and the Bun sha256) by itself.
 - Renovate (`.github/renovate.json5`) opens the pull requests for a new GNOME runtime (manifest,
-  CI image, this page), the shared-modules submodule, WirePlumber, pnpm and Tauri; each lists what
+  CI image, this page), the shared-modules submodule, WirePlumber, Bun and Tauri; each lists what
   to check before merging.
-- pnpm itself comes from the npm registry as a source; Node and Rust are the SDK extensions.
+- Bun itself comes from the npm registry as a source (`@oven/bun-linux-x64-baseline`,
+  `@oven/bun-linux-aarch64`); Rust is the SDK extension, Node is not needed. flatpak-builder-tools
+  has no generator for `bun.lock`, so `flatpak/node-sources.ts` writes `node-sources.json`: every
+  package Bun installs on Linux (glibc, x86_64 or aarch64) as an archive extracted into Bun's cache
+  layout (`flatpak-node/bun-cache/<name>@<version>@@@1`), which `BUN_INSTALL_CACHE_DIR` points
+  `bun install --frozen-lockfile` at, so it installs without network access.
 - The `<release>` entry of the metainfo, which Flatpak shows as the app's version, is set from
   `Cargo.toml` when the bundle is built, since **Bump version** does not rewrite the metainfo.
 - The runtime has PipeWire's tools (`pw-dump`, `pw-record`, `pw-play`) but not WirePlumber's, so
