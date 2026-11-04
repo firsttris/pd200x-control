@@ -15,3 +15,4 @@ test-results/
 /.flatpak-builder/
 /flatpak/build-dir/
 /flatpak/repo/
+**/project.inlang/cache/
