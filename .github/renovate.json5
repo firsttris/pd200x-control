@@ -47,16 +47,6 @@
       versioningTemplate: "loose",
     },
     {
-      // "packageManager": "bun@x.y.z": the Bun of every workflow (bun-version-file, and the
-      // npm-installed Bun of the Playwright jobs)
-      customType: "regex",
-      managerFilePatterns: ["/^app/package\\.json$/"],
-      matchStrings: ['"packageManager": "bun@(?<currentValue>\\d+\\.\\d+\\.\\d+)"'],
-      depNameTemplate: "oven-sh/bun",
-      datasourceTemplate: "github-releases",
-      extractVersionTemplate: "^bun-v(?<version>.+)$",
-    },
-    {
       // The Flatpak's Bun binaries (their sha256 comes from renovate-flatpak.yml)
       customType: "regex",
       managerFilePatterns: ["/^flatpak/[^/]+\\.ya?ml$/"],
@@ -104,8 +94,10 @@
     },
     {
       // Bun: app/package.json's packageManager and the Flatpak's Bun binaries in one PR: the
-      // Flatpak builds offline with the Bun of its manifest.
-      matchPackageNames: ["oven-sh/bun"],
+      // Flatpak builds offline with the Bun of its manifest. Renovate's bun manager reads
+      // "packageManager": "bun@x.y.z" itself, as the npm package `bun` (no regex manager needed);
+      // without it here that one would go into the monthly group without the Flatpak's Bun.
+      matchPackageNames: ["bun", "oven-sh/bun"],
       enabled: true,
       groupName: "Bun",
       sourceUrl: "https://github.com/oven-sh/bun",
