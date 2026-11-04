@@ -153,7 +153,7 @@ The full documentation, with search, is at **[firsttris.github.io/pd200x-control
 
 ## 🛠️ Development
 
-Requires Rust, Node 22 with pnpm, `just` and WebKitGTK 4.1 (or a toolbox: `bash packaging/toolbox.sh`).
+Requires Rust, [Bun](https://bun.sh/) 1.4, `just` and WebKitGTK 4.1 (or a toolbox: `bash packaging/toolbox.sh`).
 
 ```bash
 git clone https://github.com/firsttris/pd200x-control && cd pd200x-control

@@ -10,30 +10,30 @@ default: lint test
 
 # Install frontend dependencies.
 setup:
-    cd app && pnpm install
+    cd app && bun install
 
 # Start the desktop app in development mode (against the real microphone).
 dev:
-    cd app && pnpm tauri dev
+    cd app && bun run tauri dev
 
 # Start the desktop app against a simulated microphone.
 dev-sim:
-    cd app && PD200X_SIMULATOR=1 pnpm tauri dev
+    cd app && PD200X_SIMULATOR=1 bun run tauri dev
 
 # Start only the frontend in the browser, against the in-memory mock backend.
 dev-mock:
-    cd app && pnpm dev:mock
+    cd app && bun run dev:mock
 
 # All checks that CI runs before the tests.
 lint: _dist
     cargo fmt --all --check
     cargo clippy --workspace --all-targets --all-features -- -D warnings
-    cd app && pnpm lint && pnpm typecheck
+    cd app && bun run lint && bun run typecheck
 
 # Format Rust and TypeScript, apply Biome's safe fixes.
 format:
     cargo fmt --all
-    cd app && pnpm format
+    cd app && bun run format
 
 # Every test layer: Rust, Vitest, Playwright.
 test: test-rust test-frontend e2e
@@ -44,11 +44,11 @@ test-rust: _dist
 
 # Vitest unit and component tests with coverage thresholds.
 test-frontend:
-    cd app && pnpm coverage
+    cd app && bun run coverage
 
 # Playwright end-to-end tests against the mock backend.
 e2e:
-    cd app && pnpm e2e
+    cd app && bun run e2e
 
 # Regenerate app/src/lib/bindings.ts from the Tauri commands.
 bindings: _dist
@@ -66,7 +66,7 @@ docs:
 # Release builds of the CLI and the AppImage.
 build:
     cargo build --release -p pd200x-cli
-    cd app && NO_STRIP=1 pnpm tauri build --bundles appimage
+    cd app && NO_STRIP=1 bun run tauri build --bundles appimage
 
 # Copy the CLI and the AppImage to ~/.local/bin and register the desktop entry.
 install: build

@@ -3,14 +3,13 @@
 #   flatpak-builder --user --install --force-clean flatpak/build-dir \
 #     flatpak/io.github.firsttris.pd200x-control.yml
 #
-# cargo-sources.json and node-sources.json come from Cargo.lock and app/pnpm-lock.yaml; regenerate
-# them with flatpak/update-sources.sh whenever either lock file changes.
+# cargo-sources.json and node-sources.json come from Cargo.lock and app/bun.lock; regenerate them
+# with flatpak/update-sources.sh whenever either lock file changes.
 id: io.github.firsttris.pd200x-control
 runtime: org.gnome.Platform
 runtime-version: "51"
 sdk: org.gnome.Sdk
 sdk-extensions:
-  - org.freedesktop.Sdk.Extension.node24
   - org.freedesktop.Sdk.Extension.rust-stable
 command: pd200x-control
 
@@ -65,14 +64,14 @@ modules:
   - name: pd200x-control
     buildsystem: simple
     build-options:
-      append-path: /usr/lib/sdk/node24/bin:/usr/lib/sdk/rust-stable/bin
-      # The pnpm below, ahead of any other.
-      prepend-path: /run/build/pd200x-control/bin
+      append-path: /usr/lib/sdk/rust-stable/bin
+      # The Bun below, ahead of any other. Without Node, Bun also runs the tools' `node` scripts.
+      prepend-path: /run/build/pd200x-control/bun/bin
       env:
         CARGO_HOME: /run/build/pd200x-control/cargo
         CARGO_NET_OFFLINE: "true"
-        XDG_CACHE_HOME: /run/build/pd200x-control/flatpak-node/cache
-        npm_config_offline: "true"
+        # Filled by node-sources.json; with every package in it, bun install needs no network.
+        BUN_INSTALL_CACHE_DIR: /run/build/pd200x-control/flatpak-node/bun-cache
     sources:
       # The checkout this manifest is in. Flathub would use a git source with the release tag.
       - type: dir
@@ -85,23 +84,25 @@ modules:
           - app/dist
           - app/src/paraglide
           - target
-      # pnpm itself (app/package.json's packageManager), run by Node from the SDK extension.
+      # Bun itself (app/package.json's packageManager), the npm package of its binary. The
+      # baseline build runs on x86_64 CPUs without AVX2 too.
       - type: archive
-        url: https://registry.npmjs.org/pnpm/-/pnpm-10.34.9.tgz
-        sha256: 7e8a946108e7baab119e51d27c24d6178b46545422643dbc91e34e2f1ee32e0f
-        dest: pnpm
-      - type: script
-        dest: bin
-        dest-filename: pnpm
-        commands:
-          - exec node /run/build/pd200x-control/pnpm/bin/pnpm.cjs "$@"
+        url: https://registry.npmjs.org/@oven/bun-linux-x64-baseline/-/bun-linux-x64-baseline-1.4.4.tgz
+        sha256: 2ce69fadd00b741513c52adb8aad3fbee93170d0abaa3b6d04df47ca8659bd40
+        dest: bun
+        only-arches: [x86_64]
+      - type: archive
+        url: https://registry.npmjs.org/@oven/bun-linux-aarch64/-/bun-linux-aarch64-1.4.4.tgz
+        sha256: ab95e7e692a53d25a1baa98ee395a17f5f264aedfb3cb15811432d54142f70eb
+        dest: bun
+        only-arches: [aarch64]
       - node-sources.json
       - cargo-sources.json
     build-commands:
-      - cd app && pnpm install --offline --frozen-lockfile --store-dir=/run/build/pd200x-control/flatpak-node/pnpm-store
+      - cd app && bun install --frozen-lockfile
       - cargo --offline fetch --locked
-      # tauri.conf.json's beforeBuildCommand builds the frontend (pnpm build) first.
-      - cd app && pnpm tauri build --no-bundle
+      # tauri.conf.json's beforeBuildCommand builds the frontend (bun run build) first.
+      - cd app && bun run tauri build --no-bundle
       - cargo build --release --offline --locked -p pd200x-cli
       - install -Dm755 target/release/pd200x-control /app/bin/pd200x-control
       - install -Dm755 target/release/pd200x /app/bin/pd200x

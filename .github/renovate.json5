@@ -1,14 +1,14 @@
 // Renovate (GitHub App, https://github.com/apps/renovate): a pull request for each new release of
 // what pd200x-control builds on, plus the "Dependency Dashboard" issue listing what is open. Their
 // own pull requests: the GNOME runtime of the Flatpak (manifest, CI image, docs), Flathub's
-// shared-modules (tray library, Lua), the WirePlumber the Flatpak builds for wpctl, pnpm
-// (package.json, the Flatpak's pnpm source, screenshots.yml) and Tauri with tauri-specta. A changed
-// lock file or pnpm needs new Flatpak sources and a sha256 that Renovate cannot make:
+// shared-modules (tray library, Lua), the WirePlumber the Flatpak builds for wpctl, Bun
+// (app/package.json's packageManager, the Flatpak's Bun binaries) and Tauri with tauri-specta. A
+// changed lock file or Bun needs new Flatpak sources and a sha256 that Renovate cannot make:
 // renovate-flatpak.yml adds them on the Renovate branch.
 // Everything else (the other packages, the actions, the images) comes with the shared settings of
 // firsttris/workflows (renovate/default.json5): minor and patch updates once a month in one pull
 // request that merges itself when CI is green, majors on request in the dashboard.
-// Check with `npx --package renovate renovate-config-validator .github/renovate.json5`.
+// Check with `bunx --package renovate renovate-config-validator .github/renovate.json5`.
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: ["github>firsttris/workflows//renovate/default.json5"],
@@ -47,15 +47,23 @@
       versioningTemplate: "loose",
     },
     {
-      // pnpm of the Flatpak (its sha256 comes from renovate-flatpak.yml) and of the screenshots
+      // "packageManager": "bun@x.y.z": the Bun of every workflow (bun-version-file, and the
+      // npm-installed Bun of the Playwright jobs)
       customType: "regex",
-      managerFilePatterns: ["/^flatpak/[^/]+\\.ya?ml$/", "/^\\.github/workflows/screenshots\\.yml$/"],
-      matchStrings: [
-        "https://registry\\.npmjs\\.org/pnpm/-/pnpm-(?<currentValue>\\d+\\.\\d+\\.\\d+)\\.tgz",
-        "pnpm@(?<currentValue>\\d+\\.\\d+\\.\\d+)",
-      ],
-      depNameTemplate: "pnpm",
-      datasourceTemplate: "npm",
+      managerFilePatterns: ["/^app/package\\.json$/"],
+      matchStrings: ['"packageManager": "bun@(?<currentValue>\\d+\\.\\d+\\.\\d+)"'],
+      depNameTemplate: "oven-sh/bun",
+      datasourceTemplate: "github-releases",
+      extractVersionTemplate: "^bun-v(?<version>.+)$",
+    },
+    {
+      // The Flatpak's Bun binaries (their sha256 comes from renovate-flatpak.yml)
+      customType: "regex",
+      managerFilePatterns: ["/^flatpak/[^/]+\\.ya?ml$/"],
+      matchStrings: ["/-/bun-linux-[a-z0-9-]+-(?<currentValue>\\d+\\.\\d+\\.\\d+)\\.tgz"],
+      depNameTemplate: "oven-sh/bun",
+      datasourceTemplate: "github-releases",
+      extractVersionTemplate: "^bun-v(?<version>.+)$",
     },
   ],
   packageRules: [
@@ -65,7 +73,7 @@
       commitMessageTopic: "GNOME runtime",
       sourceUrl: "https://github.com/flathub-infra/flatpak-github-actions",
       prBodyNotes: [
-        "The runtime, the image of the Flatpak workflow and docs/development.md move together. Before merging: the SDK extensions `org.freedesktop.Sdk.Extension.node24` and `rust-stable` must exist for the new runtime's freedesktop branch (`flatpak remote-info flathub org.freedesktop.Sdk.Extension.node24//<branch>`); the Flatpak workflow of this PR builds the bundle, including WirePlumber and the shared modules. Then install the bundle and check the tray icon and the system microphone volume (wpctl) as in docs/installation.md#flatpak.",
+        "The runtime, the image of the Flatpak workflow and docs/development.md move together. Before merging: the SDK extension `org.freedesktop.Sdk.Extension.rust-stable` must exist for the new runtime's freedesktop branch (`flatpak remote-info flathub org.freedesktop.Sdk.Extension.rust-stable//<branch>`); the Flatpak workflow of this PR builds the bundle, including WirePlumber and the shared modules. Then install the bundle and check the tray icon and the system microphone volume (wpctl) as in docs/installation.md#flatpak.",
       ],
       schedule: ["at any time"],
       automerge: false,
@@ -95,19 +103,14 @@
       dependencyDashboardApproval: false,
     },
     {
-      // package.json's packageManager, the Flatpak's pnpm and screenshots.yml in one PR: the
-      // Flatpak builds offline with the pnpm of its manifest. pnpm stays below 11 because
-      // flatpak-node-generator (flatpak-builder-tools) cannot yet fill the store layout of newer
-      // pnpm: the offline install fails with ERR_PNPM_NO_OFFLINE_TARBALL (#9). Raise it once
-      // flatpak-builder-tools supports it; the Flatpak changes pnpm 12 needs are on #9's branch
-      // (da73b00, e5e99a5).
-      matchPackageNames: ["pnpm"],
-      allowedVersions: "<11",
+      // Bun: app/package.json's packageManager and the Flatpak's Bun binaries in one PR: the
+      // Flatpak builds offline with the Bun of its manifest.
+      matchPackageNames: ["oven-sh/bun"],
       enabled: true,
-      groupName: "pnpm",
-      sourceUrl: "https://github.com/pnpm/pnpm",
+      groupName: "Bun",
+      sourceUrl: "https://github.com/oven-sh/bun",
       prBodyNotes: [
-        "`renovate-flatpak.yml` sets the sha256 of the new pnpm in the Flatpak manifest on this branch. The Flatpak workflow builds the bundle with it (`pnpm install --offline`).",
+        "`packageManager` in app/package.json (CI's `bun-version-file`, the `npm install bun@…` of the Playwright jobs) and the Bun binaries of the Flatpak manifest move together; `renovate-flatpak.yml` sets their sha256 on this branch. Bun installs, runs the scripts, Vite, Vitest and Playwright's runner; the Flatpak workflow of this PR installs offline from `flatpak/node-sources.json` and builds the bundle with it.",
       ],
       schedule: ["at any time"],
       automerge: false,

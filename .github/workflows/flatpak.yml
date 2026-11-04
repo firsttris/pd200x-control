@@ -2,7 +2,7 @@ name: Flatpak
 
 # Builds the Flatpak bundle from source (flatpak/io.github.firsttris.pd200x-control.yml, see
 # docs/development.md#flatpak) and checks that the offline sources still match Cargo.lock and
-# app/pnpm-lock.yaml (regenerate them with flatpak/update-sources.sh). Runs on pull requests that
+# app/bun.lock (regenerate them with flatpak/update-sources.sh). Runs on pull requests that
 # touch the Flatpak or a lock file, by hand, and from release.yml, which attaches the bundle.
 on:
   pull_request:
@@ -11,7 +11,7 @@ on:
     paths:
       - "flatpak/**"
       - "Cargo.lock"
-      - "app/pnpm-lock.yaml"
+      - "app/bun.lock"
       - "app/src-tauri/tauri.conf.json"
       - ".gitmodules"
       - ".github/workflows/flatpak.yml"
@@ -49,6 +49,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+      # flatpak/node-sources.ts
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: app/package.json
 
       - name: Install flatpak-builder-tools
         run: |
@@ -56,7 +60,7 @@ jobs:
           git -C "$RUNNER_TEMP/fbt" fetch -q --depth 1 https://github.com/flatpak/flatpak-builder-tools.git "$FBT_COMMIT"
           git -C "$RUNNER_TEMP/fbt" checkout -q FETCH_HEAD
           python3 -m venv "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/pip" install -q "$RUNNER_TEMP/fbt/node" aiohttp tomlkit PyYAML
+          "$RUNNER_TEMP/venv/bin/pip" install -q aiohttp tomlkit
           echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
           echo "FBT=$RUNNER_TEMP/fbt" >> "$GITHUB_ENV"
 
@@ -95,4 +99,4 @@ jobs:
           manifest-path: flatpak/io.github.firsttris.pd200x-control.yml
           bundle: ${{ steps.name.outputs.bundle }}
           artifact-name: ${{ inputs.artifact-name || 'flatpak-bundle' }}
-          cache-key: flatpak-builder-${{ hashFiles('flatpak/**', 'Cargo.lock', 'app/pnpm-lock.yaml') }}
+          cache-key: flatpak-builder-${{ hashFiles('flatpak/**', 'Cargo.lock', 'app/bun.lock') }}

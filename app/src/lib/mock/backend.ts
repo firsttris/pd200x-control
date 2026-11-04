@@ -1,6 +1,6 @@
 /**
  * In-memory implementation of every Tauri command, used when the frontend
- * runs in a plain browser (`pnpm dev:mock`), in unit tests and in the
+ * runs in a plain browser (`bun run dev:mock`), in unit tests and in the
  * Playwright tests. It behaves like src-tauri/src/hub.rs with a simulated
  * microphone, so every screen can be used without hardware.
  */
