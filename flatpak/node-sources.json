@@ -235,9 +235,9 @@
     },
     {
         "type": "archive",
-        "url": "https://registry.npmjs.org/@inlang/paraglide-js/-/paraglide-js-2.29.3.tgz",
-        "sha512": "688f604fbcc64e9aff97cb5933b3971eb806aee67a8dcbb6888a88c3c41728e18e6386a4177bb57082ba101b2db419be0c72341468b00a5f315548f3ee40d91e",
-        "dest": "flatpak-node/bun-cache/@inlang/paraglide-js@2.29.3@@@1"
+        "url": "https://registry.npmjs.org/@inlang/paraglide-js/-/paraglide-js-3.1.0.tgz",
+        "sha512": "57ca416b665d68f0eae923bb3fb3115ecf8565117b30c212f2c41a99cd698e3cee60517b683dfd040c9972566f7fd0f38e22ee2820d730e2cea023de6e3073ab",
+        "dest": "flatpak-node/bun-cache/@inlang/paraglide-js@3.1.0@@@1"
     },
     {
         "type": "archive",
@@ -256,6 +256,12 @@
         "url": "https://registry.npmjs.org/@inlang/sdk/-/sdk-4.1.0.tgz",
         "sha512": "a4f95ac727a6705301730071df5cdb48d5b028e4522dcdb2bfddefd2e182878420361fe4051b8b941c5bb9b98c13a50916c8fee676daa36583663cf7173b3e14",
         "dest": "flatpak-node/bun-cache/@inlang/sdk@4.1.0@@@1"
+    },
+    {
+        "type": "archive",
+        "url": "https://registry.npmjs.org/@inlang/sdk/-/sdk-4.2.0.tgz",
+        "sha512": "0a66aabe7df8c2cc62176ef7d7c670dab83ed35ec71cd256579307f2b7f254a540359369ce5cedc7345b1627a713f80048c2c3f2896e6071e89486ffa7a120af",
+        "dest": "flatpak-node/bun-cache/@inlang/sdk@4.2.0@@@1"
     },
     {
         "type": "archive",
@@ -1234,12 +1240,6 @@
         "url": "https://registry.npmjs.org/json5/-/json5-2.2.3.tgz",
         "sha512": "5e63967bb7b21d81f5e1c2dd54fa3283e18e1f7ad85fef8aa73af2949c125bdf2ddcd93e53c5ce97c15628e830b7375bf255c67facd8c035337873167f16acca",
         "dest": "flatpak-node/bun-cache/json5@2.2.3@@@1"
-    },
-    {
-        "type": "archive",
-        "url": "https://registry.npmjs.org/jsonc-parser/-/jsonc-parser-3.3.1.tgz",
-        "sha512": "1d4807eb92b27a3ad414fbc714f6ea398d2bb058a9dc1a39c1be2782f762d44a426165100c2e55f98ee6670b3e0cb92be0cfffcd02686a7bb548ffbcec3bf5a1",
-        "dest": "flatpak-node/bun-cache/jsonc-parser@3.3.1@@@1"
     },
     {
         "type": "archive",
