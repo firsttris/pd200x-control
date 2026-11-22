@@ -87,12 +87,12 @@ modules:
       # Bun itself (app/package.json's packageManager), the npm package of its binary. The
       # baseline build runs on x86_64 CPUs without AVX2 too.
       - type: archive
-        url: https://registry.npmjs.org/@oven/bun-linux-x64-baseline/-/bun-linux-x64-baseline-1.4.4.tgz
+        url: https://registry.npmjs.org/@oven/bun-linux-x64-baseline/-/bun-linux-x64-baseline-1.4.5.tgz
         sha256: 2ce69fadd00b741513c52adb8aad3fbee93170d0abaa3b6d04df47ca8659bd40
         dest: bun
         only-arches: [x86_64]
       - type: archive
-        url: https://registry.npmjs.org/@oven/bun-linux-aarch64/-/bun-linux-aarch64-1.4.4.tgz
+        url: https://registry.npmjs.org/@oven/bun-linux-aarch64/-/bun-linux-aarch64-1.4.5.tgz
         sha256: ab95e7e692a53d25a1baa98ee395a17f5f264aedfb3cb15811432d54142f70eb
         dest: bun
         only-arches: [aarch64]
